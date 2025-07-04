@@ -159,6 +159,11 @@ export interface FarcasterMessage {
 
 export interface FarcasterEvent {
   type:
+    | "HUB_EVENT_TYPE_MERGE_MESSAGE"
+    | "HUB_EVENT_TYPE_PRUNE_MESSAGE"
+    | "HUB_EVENT_TYPE_REVOKE_MESSAGE"
+    | "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT"
+    // Keep backwards compatibility
     | "MERGE_MESSAGE"
     | "PRUNE_MESSAGE"
     | "REVOKE_MESSAGE"

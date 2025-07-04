@@ -19,7 +19,9 @@
       "Bash(docker-compose up:*)",
       "WebFetch(domain:docs.farcaster.xyz)",
       "Bash(grep:*)",
-      "Bash(timeout:*)"
+      "Bash(timeout:*)",
+      "Bash(find:*)",
+      "Bash(tsc --noEmit)"
     ],
     "deny": []
   }
