@@ -18,6 +18,9 @@ export interface RedisConfig {
 
 export interface PostgresConfig {
   connectionString: string;
+  testConnectionString?: string;
+  poolSize?: number;
+  logQueries?: boolean;
 }
 
 export interface AuthConfig {
@@ -239,15 +242,67 @@ export interface ApiResponse<T = any> {
 }
 
 export interface PaginatedResponse<T> {
-  data: T[];
-  pagination: {
-    page: number;
-    pageSize: number;
-    total: number;
-    totalPages: number;
-    hasNext: boolean;
-    hasPrev: boolean;
+  messages: T[];
+  nextPageToken?: string;
+}
+
+export interface PaginatedEventsResponse<T> {
+  events: T[];
+  nextPageToken?: string;
+}
+
+// Specific message types for hub client
+export type CastMessage = FarcasterMessage;
+export type ReactionMessage = FarcasterMessage;
+export type LinkMessage = FarcasterMessage;
+export type VerificationMessage = FarcasterMessage;
+export type UserDataMessage = FarcasterMessage;
+export type UsernameProofMessage = FarcasterMessage;
+export interface OnChainEvent {
+  type: string;
+  chainId: number;
+  blockNumber: number;
+  blockHash: string;
+  blockTimestamp: number;
+  transactionHash: string;
+  logIndex: number;
+  fid: number;
+  signerEventBody?: {
+    key: string;
+    keyType: number;
+    eventType: string;
+    metadata: string;
+    metadataType: number;
   };
+  idRegisterEventBody?: {
+    to: string;
+    eventType: string;
+    from?: string;
+    recoveryAddress: string;
+  };
+}
+
+// Hub info response
+export interface HubInfoResponse {
+  version: string;
+  nickname?: string;
+  rootHash?: string;
+  dbStats: {
+    numMessages: number;
+    numFidRegistrations: number;
+    approxSize: number;
+  };
+  numShards?: number;
+  shardInfos?: Array<{
+    shardId: number;
+    maxHeight: number;
+    numMessages: number;
+    numFidRegistrations: number;
+    approxSize: number;
+    blockDelay: number;
+    mempoolSize: number;
+  }>;
+  peer_id?: string;
 }
 
 export interface AuthTokenPayload {

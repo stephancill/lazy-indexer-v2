@@ -14,7 +14,11 @@
       "Bash(echo:*)",
       "Bash(bun check:*)",
       "Bash(./node_modules/.bin/biome:*)",
-      "Bash(bunx:*)"
+      "Bash(bunx:*)",
+      "Bash(bun test:*)",
+      "Bash(docker-compose up:*)",
+      "WebFetch(domain:docs.farcaster.xyz)",
+      "Bash(grep:*)"
     ],
     "deny": []
   }
