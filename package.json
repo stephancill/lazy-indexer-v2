@@ -1,0 +1,42 @@
+{
+  "name": "farcaster-indexer",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "setup": "./scripts/dev.sh",
+    "dev": "concurrently \"npm run dev:indexer\" \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:indexer": "cd packages/indexer && npm run dev",
+    "dev:api": "cd packages/api && npm run dev",
+    "dev:web": "cd apps/admin-web && npm run dev",
+    "build": "./scripts/build.sh",
+    "build:shared": "cd packages/shared && npm run build",
+    "build:indexer": "cd packages/indexer && npm run build",
+    "build:api": "cd packages/api && npm run build",
+    "build:web": "cd apps/admin-web && npm run build",
+    "migrate": "cd apps/cli && npm run migrate",
+    "test": "npm run test:shared && npm run test:indexer && npm run test:api && npm run test:cli",
+    "test:shared": "cd packages/shared && npm run test",
+    "test:indexer": "cd packages/indexer && npm run test",
+    "test:api": "cd packages/api && npm run test",
+    "test:cli": "cd apps/cli && npm run test",
+    "test:watch": "npm run test:shared -- --watch",
+    "test:coverage": "npm run test:shared -- --coverage && npm run test:indexer -- --coverage && npm run test:api -- --coverage",
+    "test:integration": "npm run test:shared -- --run integration && npm run test:indexer -- --run integration && npm run test:api -- --run integration",
+    "test:load": "npm run test:indexer -- --run load && npm run test:api -- --run load",
+    "check": "bunx @biomejs/biome check .",
+    "check:fix": "bunx @biomejs/biome check --apply .",
+    "format": "bunx @biomejs/biome format --write .",
+    "deploy": "./scripts/deploy.sh",
+    "clean": "rm -rf packages/*/dist apps/*/dist node_modules packages/*/node_modules apps/*/node_modules"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@biomejs/biome": "^1.4.1",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@farcaster/core": "^0.18.1"
+  }
+}

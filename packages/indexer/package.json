@@ -1,0 +1,26 @@
+{
+  "name": "@farcaster-indexer/indexer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "bun run --watch src/index.ts",
+    "start": "bun run dist/index.js",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@farcaster-indexer/shared": "workspace:*",
+    "bullmq": "^4.12.0",
+    "drizzle-kit": "^0.20.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+}

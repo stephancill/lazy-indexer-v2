@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(bun install:*)",
+      "Bash(bun run:*)",
+      "Bash(./scripts/build.sh:*)",
+      "Bash(bash:*)",
+      "Bash(cd:*)",
+      "Bash(bunx biome check:*)",
+      "Bash(cd:*)",
+      "Bash(docker-compose ps:*)",
+      "Bash(echo:*)",
+      "Bash(bun check:*)",
+      "Bash(./node_modules/.bin/biome:*)",
+      "Bash(bunx:*)"
+    ],
+    "deny": []
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@farcaster-indexer/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "dev": "tsc --build --watch",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:coverage": "vitest --coverage",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "drizzle-orm": "^0.29.0",
+    "postgres": "^3.4.3",
+    "ioredis": "^5.3.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+}
