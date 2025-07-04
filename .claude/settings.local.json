@@ -18,7 +18,8 @@
       "Bash(bun test:*)",
       "Bash(docker-compose up:*)",
       "WebFetch(domain:docs.farcaster.xyz)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(timeout:*)"
     ],
     "deny": []
   }
