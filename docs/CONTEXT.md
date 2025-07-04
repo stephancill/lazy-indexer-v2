@@ -24,7 +24,7 @@ hubs also provide an interface to subscribe to messages as they arrive - this us
 
 ## problem
 
-the interfaces for snapchain are directly useful for most applications. for example, it only exposes methods for looking up messages by user ID e.g.
+the interfaces for snapchain are not directly useful for most applications. for example, it only exposes methods for looking up messages by user ID e.g.
 
 - castsByFid
 - reactionsByFid
@@ -45,7 +45,7 @@ the solution is to index the data into a database and query the database instead
 
 we want to build a farcaster indexer that meets the following requirements
 
-- lets the user specify the data that they want to index i.e. message types, fid ranges, fid exclusion ranges, fid exclusion list etc. the indexing criteria should be flexible
+- only indexes the data that the application is interested in
 - keeps the data up to date
 - backfill can be interrupted and resumed
 - can specify multiple hubs to use and when the first is not available (rate limiting/offline), it falls back to the next in one in the list
@@ -98,9 +98,5 @@ const client = getSSLHubRpcClient('snapchain-grpc-api.neynar.com:443', {
 interceptors: [
 createDefaultMetadataKeyInterceptor('x-api-key', 'EF1AC393-F7F1-4A1D-8CEC-9D2192DDD347'),
 ],
-'grpc.max_receive_message_length': 20 _ 1024 _ 1024,
+'grpc.max*receive_message_length': 20 * 1024 \_ 1024,
 });
-
-## engineer prompt
-
-you are an expert backend engineer. come up with a specification that will satisfy the requirements with the given tech stack and record it in SPECIFICATION.md

@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/exports.js",
+    "./queue": "./dist/queue.js",
+    "./monitoring": "./dist/monitoring.js"
+  },
   "scripts": {
     "build": "tsc --build",
     "dev": "bun run --watch src/index.ts",
