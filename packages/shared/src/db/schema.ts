@@ -139,7 +139,7 @@ export const verifications = pgTable(
     hash: varchar("hash", { length: 64 }).primaryKey(),
     fid: integer("fid").notNull(),
     address: varchar("address", { length: 42 }).notNull(),
-    protocol: varchar("protocol", { length: 20 }).notNull().default("ethereum"),
+    protocol: varchar("protocol").notNull().default("ethereum"),
     blockHash: varchar("block_hash", { length: 66 }),
     timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -160,7 +160,7 @@ export const userData = pgTable(
   {
     hash: varchar("hash", { length: 64 }).primaryKey(),
     fid: integer("fid").notNull(),
-    type: varchar("type", { length: 20 }).notNull(), // 'pfp', 'display', 'bio', 'url', 'username'
+    type: varchar("type").notNull(), // 'pfp', 'display', 'bio', 'url', 'username'
     value: text("value").notNull(),
     timestamp: timestamp("timestamp", { withTimezone: true }).notNull(),
     createdAt: timestamp("created_at", { withTimezone: true })

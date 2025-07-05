@@ -1,4 +1,9 @@
-import { type HubClient, db, schema } from "@farcaster-indexer/shared";
+import {
+  type HubClient,
+  db,
+  schema,
+  batchInsert,
+} from "@farcaster-indexer/shared";
 import type {
   CastMessage,
   LinkMessage,
@@ -110,10 +115,10 @@ export class BackfillWorker {
       }));
 
       if (userDataRecords.length > 0) {
-        await db
-          .insert(schema.userData)
-          .values(userDataRecords)
-          .onConflictDoNothing();
+        await batchInsert(schema.userData, userDataRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(
@@ -148,7 +153,10 @@ export class BackfillWorker {
       }));
 
       if (castRecords.length > 0) {
-        await db.insert(schema.casts).values(castRecords).onConflictDoNothing();
+        await batchInsert(schema.casts, castRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(`Stored ${castMessages.length} casts for FID ${fid}`);
@@ -179,10 +187,10 @@ export class BackfillWorker {
       }));
 
       if (reactionRecords.length > 0) {
-        await db
-          .insert(schema.reactions)
-          .values(reactionRecords)
-          .onConflictDoNothing();
+        await batchInsert(schema.reactions, reactionRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(`Stored ${reactionMessages.length} reactions for FID ${fid}`);
@@ -210,7 +218,10 @@ export class BackfillWorker {
       }));
 
       if (linkRecords.length > 0) {
-        await db.insert(schema.links).values(linkRecords).onConflictDoNothing();
+        await batchInsert(schema.links, linkRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(`Stored ${linkMessages.length} links for FID ${fid}`);
@@ -239,10 +250,10 @@ export class BackfillWorker {
       }));
 
       if (verificationRecords.length > 0) {
-        await db
-          .insert(schema.verifications)
-          .values(verificationRecords)
-          .onConflictDoNothing();
+        await batchInsert(schema.verifications, verificationRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(
@@ -282,10 +293,10 @@ export class BackfillWorker {
       }));
 
       if (eventRecords.length > 0) {
-        await db
-          .insert(schema.onChainEvents)
-          .values(eventRecords)
-          .onConflictDoNothing();
+        await batchInsert(schema.onChainEvents, eventRecords, {
+          batchSize: 500,
+          onConflictDoNothing: true,
+        });
       }
 
       console.log(

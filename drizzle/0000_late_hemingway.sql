@@ -12,7 +12,6 @@ CREATE TABLE IF NOT EXISTS "casts" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-
 CREATE TABLE IF NOT EXISTS "links" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,
@@ -74,7 +73,7 @@ CREATE TABLE IF NOT EXISTS "targets" (
 CREATE TABLE IF NOT EXISTS "user_data" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,
-	"type" varchar(20) NOT NULL,
+	"type" varchar NOT NULL,
 	"value" text NOT NULL,
 	"timestamp" timestamp with time zone NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -104,7 +103,7 @@ CREATE TABLE IF NOT EXISTS "verifications" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,
 	"address" varchar(42) NOT NULL,
-	"protocol" varchar(20) DEFAULT 'ethereum' NOT NULL,
+	"protocol" varchar DEFAULT 'ethereum' NOT NULL,
 	"block_hash" varchar(66),
 	"timestamp" timestamp with time zone NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL

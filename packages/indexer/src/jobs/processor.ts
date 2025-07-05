@@ -1,4 +1,4 @@
-import { db, schema } from "@farcaster-indexer/shared";
+import { db, schema, batchInsert } from "@farcaster-indexer/shared";
 import { eq } from "drizzle-orm";
 import type { ProcessEventJob } from "../queue.js";
 import type {
@@ -237,7 +237,10 @@ export class ProcessorWorker {
     for (const batch of batches) {
       if (batch.data.length > 0) {
         try {
-          await db.insert(batch.table).values(batch.data).onConflictDoNothing();
+          await batchInsert(batch.table, batch.data, {
+            batchSize: 100,
+            onConflictDoNothing: true,
+          });
           console.log(`Batch inserted ${batch.data.length} ${batch.name}`);
           batch.data.length = 0; // Clear the batch
         } catch (error) {
@@ -254,10 +257,10 @@ export class ProcessorWorker {
         const userDataRecords = this.pendingUserData.map(
           (item) => item.userDataRecord
         );
-        await db
-          .insert(schema.userData)
-          .values(userDataRecords)
-          .onConflictDoNothing();
+        await batchInsert(schema.userData, userDataRecords, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
 
         // Update user profiles
         await this.batchUpdateUserProfiles(this.pendingUserData);

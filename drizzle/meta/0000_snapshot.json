@@ -1,5 +1,5 @@
 {
-  "id": "cd4e2ab3-9698-43e7-aeb0-d39107f6bd85",
+  "id": "a38eda23-45df-410d-8cf0-91f7a53bc8b9",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -79,156 +79,38 @@
       "indexes": {
         "casts_fid_idx": {
           "name": "casts_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "casts_timestamp_idx": {
           "name": "casts_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         },
         "casts_parent_hash_idx": {
           "name": "casts_parent_hash_idx",
-          "columns": ["parent_hash"],
+          "columns": [
+            "parent_hash"
+          ],
           "isUnique": false
         },
         "casts_parent_fid_idx": {
           "name": "casts_parent_fid_idx",
-          "columns": ["parent_fid"],
+          "columns": [
+            "parent_fid"
+          ],
           "isUnique": false
         },
         "casts_fid_timestamp_idx": {
           "name": "casts_fid_timestamp_idx",
-          "columns": ["fid", "timestamp"],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "job_status": {
-      "name": "job_status",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "job_id": {
-          "name": "job_id",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "job_type": {
-          "name": "job_type",
-          "type": "varchar(50)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "status": {
-          "name": "status",
-          "type": "varchar(20)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "fid": {
-          "name": "fid",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "max_attempts": {
-          "name": "max_attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 3
-        },
-        "data": {
-          "name": "data",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "result": {
-          "name": "result",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "error": {
-          "name": "error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "completed_at": {
-          "name": "completed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "job_status_job_id_idx": {
-          "name": "job_status_job_id_idx",
-          "columns": ["job_id"],
-          "isUnique": false
-        },
-        "job_status_status_idx": {
-          "name": "job_status_status_idx",
-          "columns": ["status"],
-          "isUnique": false
-        },
-        "job_status_job_type_idx": {
-          "name": "job_status_job_type_idx",
-          "columns": ["job_type"],
-          "isUnique": false
-        },
-        "job_status_fid_idx": {
-          "name": "job_status_fid_idx",
-          "columns": ["fid"],
-          "isUnique": false
-        },
-        "job_status_created_at_idx": {
-          "name": "job_status_created_at_idx",
-          "columns": ["created_at"],
-          "isUnique": false
-        },
-        "job_status_status_created_idx": {
-          "name": "job_status_status_created_idx",
-          "columns": ["status", "created_at"],
+          "columns": [
+            "fid",
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -281,27 +163,38 @@
       "indexes": {
         "links_fid_idx": {
           "name": "links_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "links_target_fid_idx": {
           "name": "links_target_fid_idx",
-          "columns": ["target_fid"],
+          "columns": [
+            "target_fid"
+          ],
           "isUnique": false
         },
         "links_type_idx": {
           "name": "links_type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "links_fid_target_idx": {
           "name": "links_fid_target_idx",
-          "columns": ["fid", "target_fid"],
+          "columns": [
+            "fid",
+            "target_fid"
+          ],
           "isUnique": false
         },
         "links_timestamp_idx": {
           "name": "links_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -402,32 +295,45 @@
       "indexes": {
         "on_chain_events_type_idx": {
           "name": "on_chain_events_type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "on_chain_events_fid_idx": {
           "name": "on_chain_events_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "on_chain_events_block_number_idx": {
           "name": "on_chain_events_block_number_idx",
-          "columns": ["block_number"],
+          "columns": [
+            "block_number"
+          ],
           "isUnique": false
         },
         "on_chain_events_block_timestamp_idx": {
           "name": "on_chain_events_block_timestamp_idx",
-          "columns": ["block_timestamp"],
+          "columns": [
+            "block_timestamp"
+          ],
           "isUnique": false
         },
         "on_chain_events_transaction_hash_idx": {
           "name": "on_chain_events_transaction_hash_idx",
-          "columns": ["transaction_hash"],
+          "columns": [
+            "transaction_hash"
+          ],
           "isUnique": false
         },
         "on_chain_events_chain_id_block_idx": {
           "name": "on_chain_events_chain_id_block_idx",
-          "columns": ["chain_id", "block_number"],
+          "columns": [
+            "chain_id",
+            "block_number"
+          ],
           "isUnique": false
         }
       },
@@ -492,32 +398,45 @@
       "indexes": {
         "reactions_fid_idx": {
           "name": "reactions_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "reactions_type_idx": {
           "name": "reactions_type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "reactions_target_hash_idx": {
           "name": "reactions_target_hash_idx",
-          "columns": ["target_hash"],
+          "columns": [
+            "target_hash"
+          ],
           "isUnique": false
         },
         "reactions_target_fid_idx": {
           "name": "reactions_target_fid_idx",
-          "columns": ["target_fid"],
+          "columns": [
+            "target_fid"
+          ],
           "isUnique": false
         },
         "reactions_fid_type_idx": {
           "name": "reactions_fid_type_idx",
-          "columns": ["fid", "type"],
+          "columns": [
+            "fid",
+            "type"
+          ],
           "isUnique": false
         },
         "reactions_timestamp_idx": {
           "name": "reactions_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -568,7 +487,9 @@
         "sync_state_name_unique": {
           "name": "sync_state_name_unique",
           "nullsNotDistinct": false,
-          "columns": ["name"]
+          "columns": [
+            "name"
+          ]
         }
       }
     },
@@ -629,12 +550,16 @@
       "indexes": {
         "targets_is_root_idx": {
           "name": "targets_is_root_idx",
-          "columns": ["is_root"],
+          "columns": [
+            "is_root"
+          ],
           "isUnique": false
         },
         "targets_last_synced_idx": {
           "name": "targets_last_synced_idx",
-          "columns": ["last_synced_at"],
+          "columns": [
+            "last_synced_at"
+          ],
           "isUnique": false
         }
       },
@@ -660,7 +585,7 @@
         },
         "type": {
           "name": "type",
-          "type": "varchar(20)",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true
         },
@@ -687,22 +612,31 @@
       "indexes": {
         "user_data_fid_idx": {
           "name": "user_data_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "user_data_type_idx": {
           "name": "user_data_type_idx",
-          "columns": ["type"],
+          "columns": [
+            "type"
+          ],
           "isUnique": false
         },
         "user_data_fid_type_idx": {
           "name": "user_data_fid_type_idx",
-          "columns": ["fid", "type"],
+          "columns": [
+            "fid",
+            "type"
+          ],
           "isUnique": false
         },
         "user_data_timestamp_idx": {
           "name": "user_data_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -761,22 +695,30 @@
       "indexes": {
         "username_proofs_fid_idx": {
           "name": "username_proofs_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "username_proofs_name_idx": {
           "name": "username_proofs_name_idx",
-          "columns": ["name"],
+          "columns": [
+            "name"
+          ],
           "isUnique": false
         },
         "username_proofs_owner_idx": {
           "name": "username_proofs_owner_idx",
-          "columns": ["owner"],
+          "columns": [
+            "owner"
+          ],
           "isUnique": false
         },
         "username_proofs_timestamp_idx": {
           "name": "username_proofs_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
@@ -835,12 +777,16 @@
       "indexes": {
         "users_username_idx": {
           "name": "users_username_idx",
-          "columns": ["username"],
+          "columns": [
+            "username"
+          ],
           "isUnique": false
         },
         "users_synced_at_idx": {
           "name": "users_synced_at_idx",
-          "columns": ["synced_at"],
+          "columns": [
+            "synced_at"
+          ],
           "isUnique": false
         }
       },
@@ -872,7 +818,7 @@
         },
         "protocol": {
           "name": "protocol",
-          "type": "varchar(20)",
+          "type": "varchar",
           "primaryKey": false,
           "notNull": true,
           "default": "'ethereum'"
@@ -900,22 +846,30 @@
       "indexes": {
         "verifications_fid_idx": {
           "name": "verifications_fid_idx",
-          "columns": ["fid"],
+          "columns": [
+            "fid"
+          ],
           "isUnique": false
         },
         "verifications_address_idx": {
           "name": "verifications_address_idx",
-          "columns": ["address"],
+          "columns": [
+            "address"
+          ],
           "isUnique": false
         },
         "verifications_protocol_idx": {
           "name": "verifications_protocol_idx",
-          "columns": ["protocol"],
+          "columns": [
+            "protocol"
+          ],
           "isUnique": false
         },
         "verifications_timestamp_idx": {
           "name": "verifications_timestamp_idx",
-          "columns": ["timestamp"],
+          "columns": [
+            "timestamp"
+          ],
           "isUnique": false
         }
       },
