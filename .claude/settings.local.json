@@ -22,7 +22,11 @@
       "Bash(timeout:*)",
       "Bash(find:*)",
       "Bash(tsc --noEmit)",
-      "Bash(bun:*)"
+      "Bash(bun:*)",
+      "Bash(rg:*)",
+      "Bash(curl:*)",
+      "Bash(node test-api-endpoints.js)",
+      "Bash(node:*)"
     ],
     "deny": []
   }
