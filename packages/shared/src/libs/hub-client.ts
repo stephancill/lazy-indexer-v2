@@ -1,4 +1,4 @@
-import { config } from '../config.js';
+import { config } from "../config.js";
 import type {
   HubConfig,
   FarcasterMessage,
@@ -13,7 +13,7 @@ import type {
   HubInfoResponse,
   PaginatedResponse,
   PaginatedEventsResponse,
-} from '../types.js';
+} from "../types.js";
 
 // Rate limiting and retry configuration
 const RATE_LIMIT_DELAY = 1000; // 1 second
@@ -33,7 +33,7 @@ export class HubClient {
     fetchFunction?: typeof fetch
   ) {
     if (this.hubs.length === 0) {
-      throw new Error('At least one hub configuration is required');
+      throw new Error("At least one hub configuration is required");
     }
     this.fetchFn = fetchFunction || fetch;
   }
@@ -59,7 +59,7 @@ export class HubClient {
     const requestOptions: RequestInit = {
       ...transformedOptions,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...transformedOptions.headers,
       },
     };
@@ -70,8 +70,12 @@ export class HubClient {
     requestOptions.signal = controller.signal;
 
     try {
-      console.log(`Making request to ${url} (hub ${this.currentHubIndex + 1}/${this.hubs.length})`);
-      
+      console.log(
+        `Making request to ${url} (hub ${this.currentHubIndex + 1}/${
+          this.hubs.length
+        })`
+      );
+
       const response = await this.fetchFn(url, requestOptions);
       clearTimeout(timeoutId);
 
@@ -83,15 +87,18 @@ export class HubClient {
       }
 
       const data = await response.json();
-      
+
       // Reset hub index on successful request
       this.currentHubIndex = 0;
-      
+
       return data;
     } catch (error) {
       clearTimeout(timeoutId);
-      
-      console.warn(`Request failed for hub ${this.currentHubIndex + 1}:`, error);
+
+      console.warn(
+        `Request failed for hub ${this.currentHubIndex + 1}:`,
+        error
+      );
 
       // Try next hub if available
       if (this.currentHubIndex < this.hubs.length - 1) {
@@ -101,11 +108,13 @@ export class HubClient {
 
       // If all hubs failed, retry with exponential backoff
       if (retryCount < MAX_RETRIES) {
-        console.log(`Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})`);
-        
+        console.log(
+          `Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})`
+        );
+
         const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        
+        await new Promise((resolve) => setTimeout(resolve, delay));
+
         // Reset to first hub for retry
         this.currentHubIndex = 0;
         return this.request<T>(endpoint, options, retryCount + 1);
@@ -118,18 +127,18 @@ export class HubClient {
   // Rate limiting helpers
   private async handleRateLimit() {
     const now = Date.now();
-    
+
     // Check if we need to wait due to rate limiting
     if (now < this.rateLimitUntil) {
       const waitTime = this.rateLimitUntil - now;
       console.log(`Rate limited, waiting ${waitTime}ms`);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
 
     // Basic rate limiting: don't make more than 1 request per second
     if (now - this.lastRequestTime < RATE_LIMIT_DELAY) {
       const waitTime = RATE_LIMIT_DELAY - (now - this.lastRequestTime);
-      await new Promise(resolve => setTimeout(resolve, waitTime));
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
     }
 
     this.lastRequestTime = Date.now();
@@ -139,17 +148,17 @@ export class HubClient {
   private updateRateLimit(response: Response) {
     // Check for rate limit headers (handle case where headers might not be available in tests)
     if (!response.headers) return;
-    
-    const rateLimitRemaining = response.headers.get('x-ratelimit-remaining');
-    const rateLimitReset = response.headers.get('x-ratelimit-reset');
-    
-    if (rateLimitRemaining === '0' && rateLimitReset) {
+
+    const rateLimitRemaining = response.headers.get("x-ratelimit-remaining");
+    const rateLimitReset = response.headers.get("x-ratelimit-reset");
+
+    if (rateLimitRemaining === "0" && rateLimitReset) {
       this.rateLimitUntil = parseInt(rateLimitReset) * 1000;
     }
 
     // Handle 429 Too Many Requests
     if (response.status === 429) {
-      const retryAfter = response.headers.get('retry-after');
+      const retryAfter = response.headers.get("retry-after");
       if (retryAfter) {
         this.rateLimitUntil = Date.now() + parseInt(retryAfter) * 1000;
       } else {
@@ -160,7 +169,7 @@ export class HubClient {
 
   // Hub info and health check
   async getHubInfo(): Promise<HubInfoResponse> {
-    return this.request<HubInfoResponse>('/v1/info');
+    return this.request<HubInfoResponse>("/v1/info");
   }
 
   async getHubHealth(): Promise<{ healthy: boolean; version: string }> {
@@ -173,7 +182,7 @@ export class HubClient {
     } catch (error) {
       return {
         healthy: false,
-        version: 'unknown',
+        version: "unknown",
       };
     }
   }
@@ -184,13 +193,16 @@ export class HubClient {
     options: { pageSize?: number; pageToken?: string; reverse?: boolean } = {}
   ): Promise<PaginatedResponse<CastMessage>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedResponse<CastMessage>>(`/v1/castsByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+
+    return this.request<PaginatedResponse<CastMessage>>(
+      `/v1/castsByFid?${params}`
+    );
   }
 
   async getAllCastsByFid(fid: number): Promise<CastMessage[]> {
@@ -212,49 +224,73 @@ export class HubClient {
 
   async getReactionsByFid(
     fid: number,
-    options: { pageSize?: number; pageToken?: string; reverse?: boolean; reactionType?: string } = {}
+    options: {
+      pageSize?: number;
+      pageToken?: string;
+      reverse?: boolean;
+      reactionType?: string;
+    } = {}
   ): Promise<PaginatedResponse<ReactionMessage>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
-    if (options.reactionType) params.append('reaction_type', options.reactionType);
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedResponse<ReactionMessage>>(`/v1/reactionsByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+    if (options.reactionType)
+      params.append("reaction_type", options.reactionType);
+
+    return this.request<PaginatedResponse<ReactionMessage>>(
+      `/v1/reactionsByFid?${params}`
+    );
   }
 
   async getAllReactionsByFid(fid: number): Promise<ReactionMessage[]> {
     const messages: ReactionMessage[] = [];
-    let pageToken: string | undefined;
 
-    do {
-      const response = await this.getReactionsByFid(fid, {
-        pageSize: 1000,
-        pageToken,
-      });
+    // Get both likes and recasts since the API requires a reaction_type parameter
+    const reactionTypes = ["Like", "Recast"]; // API expects string values
 
-      messages.push(...response.messages);
-      pageToken = response.nextPageToken;
-    } while (pageToken);
+    for (const reactionType of reactionTypes) {
+      let pageToken: string | undefined;
+
+      do {
+        const response = await this.getReactionsByFid(fid, {
+          pageSize: 1000,
+          pageToken,
+          reactionType,
+        });
+
+        messages.push(...response.messages);
+        pageToken = response.nextPageToken;
+      } while (pageToken);
+    }
 
     return messages;
   }
 
   async getLinksByFid(
     fid: number,
-    options: { pageSize?: number; pageToken?: string; reverse?: boolean; linkType?: string } = {}
+    options: {
+      pageSize?: number;
+      pageToken?: string;
+      reverse?: boolean;
+      linkType?: string;
+    } = {}
   ): Promise<PaginatedResponse<LinkMessage>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
-    if (options.linkType) params.append('link_type', options.linkType);
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedResponse<LinkMessage>>(`/v1/linksByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+    if (options.linkType) params.append("link_type", options.linkType);
+
+    return this.request<PaginatedResponse<LinkMessage>>(
+      `/v1/linksByFid?${params}`
+    );
   }
 
   async getAllLinksByFid(fid: number): Promise<LinkMessage[]> {
@@ -279,13 +315,16 @@ export class HubClient {
     options: { pageSize?: number; pageToken?: string; reverse?: boolean } = {}
   ): Promise<PaginatedResponse<VerificationMessage>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedResponse<VerificationMessage>>(`/v1/verificationsByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+
+    return this.request<PaginatedResponse<VerificationMessage>>(
+      `/v1/verificationsByFid?${params}`
+    );
   }
 
   async getAllVerificationsByFid(fid: number): Promise<VerificationMessage[]> {
@@ -310,13 +349,16 @@ export class HubClient {
     options: { pageSize?: number; pageToken?: string; reverse?: boolean } = {}
   ): Promise<PaginatedResponse<UserDataMessage>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedResponse<UserDataMessage>>(`/v1/userDataByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+
+    return this.request<PaginatedResponse<UserDataMessage>>(
+      `/v1/userDataByFid?${params}`
+    );
   }
 
   async getAllUserDataByFid(fid: number): Promise<UserDataMessage[]> {
@@ -341,13 +383,16 @@ export class HubClient {
     options: { pageSize?: number; pageToken?: string; reverse?: boolean } = {}
   ): Promise<PaginatedEventsResponse<OnChainEvent>> {
     const params = new URLSearchParams();
-    params.append('fid', fid.toString());
-    
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
-    if (options.reverse) params.append('reverse', 'true');
+    params.append("fid", fid.toString());
 
-    return this.request<PaginatedEventsResponse<OnChainEvent>>(`/v1/onChainSignersByFid?${params}`);
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+    if (options.reverse) params.append("reverse", "true");
+
+    return this.request<PaginatedEventsResponse<OnChainEvent>>(
+      `/v1/onChainSignersByFid?${params}`
+    );
   }
 
   async getAllOnChainSignersByFid(fid: number): Promise<OnChainEvent[]> {
@@ -369,29 +414,38 @@ export class HubClient {
 
   // Event streaming for real-time updates
   async getEvents(
-    options: { fromEventId?: number; pageSize?: number; pageToken?: string } = {}
+    options: {
+      fromEventId?: number;
+      pageSize?: number;
+      pageToken?: string;
+    } = {}
   ): Promise<PaginatedEventsResponse<FarcasterEvent>> {
     const params = new URLSearchParams();
-    
-    if (options.fromEventId) params.append('from_event_id', options.fromEventId.toString());
-    if (options.pageSize) params.append('pageSize', options.pageSize.toString());
-    if (options.pageToken) params.append('pageToken', options.pageToken);
 
-    return this.request<PaginatedEventsResponse<FarcasterEvent>>(`/v1/events?${params}`);
+    if (options.fromEventId)
+      params.append("from_event_id", options.fromEventId.toString());
+    if (options.pageSize)
+      params.append("pageSize", options.pageSize.toString());
+    if (options.pageToken) params.append("pageToken", options.pageToken);
+
+    return this.request<PaginatedEventsResponse<FarcasterEvent>>(
+      `/v1/events?${params}`
+    );
   }
 
   // Bulk data retrieval for a target FID
   async getAllDataByFid(fid: number) {
     console.log(`Fetching all data for FID ${fid}`);
-    
-    const [casts, reactions, links, verifications, userData, onChainSigners] = await Promise.all([
-      this.getAllCastsByFid(fid),
-      this.getAllReactionsByFid(fid),
-      this.getAllLinksByFid(fid),
-      this.getAllVerificationsByFid(fid),
-      this.getAllUserDataByFid(fid),
-      this.getAllOnChainSignersByFid(fid),
-    ]);
+
+    const [casts, reactions, links, verifications, userData, onChainSigners] =
+      await Promise.all([
+        this.getAllCastsByFid(fid),
+        this.getAllReactionsByFid(fid),
+        this.getAllLinksByFid(fid),
+        this.getAllVerificationsByFid(fid),
+        this.getAllUserDataByFid(fid),
+        this.getAllOnChainSignersByFid(fid),
+      ]);
 
     return {
       casts,

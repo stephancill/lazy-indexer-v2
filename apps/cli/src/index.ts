@@ -1,30 +1,38 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
-import { config } from '@farcaster-indexer/shared';
-import chalk from 'chalk';
-import { migrateCommand } from './commands/migrate.js';
-import { targetCommands } from './commands/targets.js';
-import { backfillCommand } from './commands/backfill.js';
-import { jobCommands } from './commands/jobs.js';
-import { healthCommand } from './commands/health.js';
-import { debugCommand } from './commands/debug.js';
-import { exportCommand, importCommand } from './commands/data.js';
+import { Command } from "commander";
+import { config } from "@farcaster-indexer/shared";
+import chalk from "chalk";
+import { migrateCommand } from "./commands/migrate.js";
+import { targetCommands } from "./commands/targets.js";
+import { backfillCommand } from "./commands/backfill.js";
+import { jobCommands } from "./commands/jobs.js";
+import { healthCommand } from "./commands/health.js";
+import { debugCommand } from "./commands/debug.js";
+import { exportCommand, importCommand } from "./commands/data.js";
 
 const program = new Command();
 
 program
-  .name('farcaster-indexer')
-  .description('Farcaster Indexer CLI - Database migrations, target management, and system operations')
-  .version('1.0.0');
+  .name("farcaster-indexer")
+  .description(
+    "Farcaster Indexer CLI - Database migrations, target management, and system operations"
+  )
+  .version("1.0.0");
 
-program
-  .hook('preAction', () => {
-    console.log(chalk.blue('🚀 Farcaster Indexer CLI'));
-    console.log(chalk.gray(`Database: ${config.postgres.connectionString.replace(/\/\/.*@/, '//***@')}`));
-    console.log(chalk.gray(`Redis: ${config.redis.host}:${config.redis.port}`));
-    console.log('');
-  });
+program.hook("preAction", () => {
+  console.log(chalk.blue("🚀 Farcaster Indexer CLI"));
+  console.log(
+    chalk.gray(
+      `Database: ${config.postgres.connectionString.replace(
+        /\/\/.*@/,
+        "//***@"
+      )}`
+    )
+  );
+  console.log(chalk.gray(`Redis: ${config.redis.host}:${config.redis.port}`));
+  console.log("");
+});
 
 // Database migration commands
 program.addCommand(migrateCommand);
@@ -50,7 +58,7 @@ program.addCommand(importCommand);
 
 // Global error handling
 program.exitOverride((err) => {
-  console.error(chalk.red('❌ Error:'), err.message);
+  console.error(chalk.red("❌ Error:"), err.message);
   process.exit(1);
 });
 

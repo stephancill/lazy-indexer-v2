@@ -12,23 +12,7 @@ CREATE TABLE IF NOT EXISTS "casts" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "job_status" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"job_id" varchar(100) NOT NULL,
-	"job_type" varchar(50) NOT NULL,
-	"status" varchar(20) NOT NULL,
-	"fid" integer,
-	"attempts" integer DEFAULT 0 NOT NULL,
-	"max_attempts" integer DEFAULT 3 NOT NULL,
-	"data" jsonb,
-	"result" jsonb,
-	"error" text,
-	"started_at" timestamp with time zone,
-	"completed_at" timestamp with time zone,
-	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
-	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
+
 CREATE TABLE IF NOT EXISTS "links" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,
@@ -131,12 +115,6 @@ CREATE INDEX IF NOT EXISTS "casts_timestamp_idx" ON "casts" ("timestamp");--> st
 CREATE INDEX IF NOT EXISTS "casts_parent_hash_idx" ON "casts" ("parent_hash");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "casts_parent_fid_idx" ON "casts" ("parent_fid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "casts_fid_timestamp_idx" ON "casts" ("fid","timestamp");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_job_id_idx" ON "job_status" ("job_id");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_status_idx" ON "job_status" ("status");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_job_type_idx" ON "job_status" ("job_type");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_fid_idx" ON "job_status" ("fid");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_created_at_idx" ON "job_status" ("created_at");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "job_status_status_created_idx" ON "job_status" ("status","created_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "links_fid_idx" ON "links" ("fid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "links_target_fid_idx" ON "links" ("target_fid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "links_type_idx" ON "links" ("type");--> statement-breakpoint

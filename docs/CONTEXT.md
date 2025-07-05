@@ -86,7 +86,7 @@ neynar needs an API key. here is example usage
 http:
 curl -X GET "https://snapchain-api.neynar.com/v1/info" \
  -H "Content-Type: application/json" \
- -H "x-api-key: EF1AC393-F7F1-4A1D-8CEC-9D2192DDD347"
+ -H "x-api-key: MY_API_KEY"
 
 grpc:
 import {
@@ -96,7 +96,7 @@ getSSLHubRpcClient,
 
 const client = getSSLHubRpcClient('snapchain-grpc-api.neynar.com:443', {
 interceptors: [
-createDefaultMetadataKeyInterceptor('x-api-key', 'EF1AC393-F7F1-4A1D-8CEC-9D2192DDD347'),
+createDefaultMetadataKeyInterceptor('x-api-key', 'MY_API_KEY'),
 ],
 'grpc.max*receive_message_length': 20 * 1024 \_ 1024,
 });

@@ -25,6 +25,7 @@
     "@bull-board/hono": "^5.10.0",
     "hono": "^3.11.0",
     "ioredis": "^5.3.2",
+    "drizzle-orm": "^0.29.5",
     "drizzle-kit": "^0.20.4"
   },
   "devDependencies": {

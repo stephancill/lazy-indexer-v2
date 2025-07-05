@@ -55,9 +55,7 @@ export const config: Config = {
         ...init,
         headers: {
           ...init.headers,
-          "x-api-key":
-            process.env.NEYNAR_API_KEY ||
-            "EF1AC393-F7F1-4A1D-8CEC-9D2192DDD347",
+          "x-api-key": process.env.NEYNAR_API_KEY || "",
         },
       }),
     },

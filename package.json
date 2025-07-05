@@ -2,7 +2,10 @@
   "name": "farcaster-indexer",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "setup": "./scripts/dev.sh",
     "dev": "concurrently \"npm run dev:indexer\" \"npm run dev:api\" \"npm run dev:web\"",
@@ -14,7 +17,11 @@
     "build:indexer": "cd packages/indexer && npm run build",
     "build:api": "cd packages/api && npm run build",
     "build:web": "cd apps/admin-web && npm run build",
-    "migrate": "cd apps/cli && npm run migrate",
+    "migrate": "cd apps/cli && bun run migrate",
+    "migrate:generate": "bunx drizzle-kit generate:pg",
+    "migrate:up": "cd apps/cli && bun run migrate:up",
+    "migrate:reset": "cd apps/cli && bun run migrate:reset",
+    "migrate:status": "cd apps/cli && bun run migrate:status",
     "test": "npm run test:shared && npm run test:indexer && npm run test:api && npm run test:cli",
     "test:shared": "cd packages/shared && npm run test",
     "test:indexer": "cd packages/indexer && npm run test",
