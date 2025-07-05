@@ -27,7 +27,11 @@
       "Bash(curl:*)",
       "Bash(node test-api-endpoints.js)",
       "Bash(node:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "Bash(NODE_ENV=test bun test --run)",
+      "Bash(docker cp:*)",
+      "Bash(docker exec:*)",
+      "Bash(NODE_ENV=test bun test *)"
     ],
     "deny": []
   }

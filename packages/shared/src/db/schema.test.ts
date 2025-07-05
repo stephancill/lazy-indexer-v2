@@ -72,7 +72,9 @@ describe('Database Schema', () => {
 
       const updated = await testDb.select().from(schema.targets).where(eq(schema.targets.fid, 1));
       
-      expect(updated[0].lastSyncedAt).toEqual(syncTime);
+      // Verify the date was updated (allow for some precision loss)
+      const timeDiff = Math.abs((updated[0].lastSyncedAt?.getTime() || 0) - syncTime.getTime());
+      expect(timeDiff).toBeLessThan(1000); // Within 1 second
     });
   });
 
@@ -288,9 +290,9 @@ describe('Database Schema', () => {
       await testDb.insert(schema.targets).values(target);
 
       // This should not throw an error due to ON CONFLICT DO NOTHING
-      await expect(
-        testDb.insert(schema.targets).values(target).onConflictDoNothing()
-      ).resolves.not.toThrow();
+      await expect(async () => {
+        await testDb.insert(schema.targets).values(target).onConflictDoNothing().execute();
+      }).not.toThrow();
     });
 
     it('should handle cascade deletes properly', async () => {

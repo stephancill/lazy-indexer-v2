@@ -26,11 +26,16 @@ export class HubClient {
   private rateLimitUntil: number = 0;
   private requestCount = 0;
   private lastRequestTime = 0;
+  private fetchFn: typeof fetch;
 
-  constructor(private hubs: HubConfig[] = config.hubs) {
+  constructor(
+    private hubs: HubConfig[] = config.hubs,
+    fetchFunction?: typeof fetch
+  ) {
     if (this.hubs.length === 0) {
       throw new Error('At least one hub configuration is required');
     }
+    this.fetchFn = fetchFunction || fetch;
   }
 
   // Main request method with fallback logic
@@ -67,7 +72,7 @@ export class HubClient {
     try {
       console.log(`Making request to ${url} (hub ${this.currentHubIndex + 1}/${this.hubs.length})`);
       
-      const response = await fetch(url, requestOptions);
+      const response = await this.fetchFn(url, requestOptions);
       clearTimeout(timeoutId);
 
       // Update rate limiting info

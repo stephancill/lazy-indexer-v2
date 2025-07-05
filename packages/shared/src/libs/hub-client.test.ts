@@ -4,7 +4,52 @@ import type { HubConfig } from '../types.js';
 
 // Mock fetch globally
 const mockFetch = vi.fn();
-global.fetch = mockFetch;
+
+// Mock samples from real hub responses
+const MOCK_RESPONSES = {
+  hubInfo: {
+    "dbStats": {"numMessages": 692159501, "numFidRegistrations": 1114471, "approxSize": 360094955658},
+    "numShards": 2,
+    "version": "0.3.0",
+    "peer_id": "12D3KooWPnkS8V21uozGuEFqLm5sdg1nbb28WmeSWotVsoAAhAY3"
+  },
+  events: {
+    "events": [{
+      "type": "HUB_EVENT_TYPE_MERGE_MESSAGE",
+      "id": 138925965312,
+      "mergeMessageBody": {
+        "message": {
+          "data": {
+            "type": "MESSAGE_TYPE_REACTION_ADD",
+            "fid": 194372,
+            "timestamp": 141955200,
+            "network": "FARCASTER_NETWORK_MAINNET"
+          },
+          "hash": "0x8fd1adc15997f6599b4330dc4784ca569ac540b8"
+        }
+      }
+    }]
+  },
+  casts: {
+    "messages": [{
+      "data": {
+        "type": "MESSAGE_TYPE_CAST_ADD",
+        "fid": 1,
+        "timestamp": 62108100,
+        "network": "FARCASTER_NETWORK_MAINNET",
+        "castAddBody": {
+          "text": "testing",
+          "embeds": []
+        }
+      },
+      "hash": "0xfc10f40b0987db72b918bd39ccbe3673e145fb67"
+    }],
+    "nextPageToken": "AwAAAAEBA7OxxPwQ9AsJh9tyuRi9Ocy+NnPhRftn"
+  }
+};
+
+// Set up global mock
+globalThis.fetch = mockFetch;
 
 describe('HubClient', () => {
   let hubClient: HubClient;
@@ -26,18 +71,33 @@ describe('HubClient', () => {
   ];
 
   beforeEach(() => {
-    hubClient = new HubClient(mockHubConfigs);
+    // Reset and configure the mock before each test
+    mockFetch.mockReset();
     mockFetch.mockClear();
+    
+    // Set default mock implementation to avoid real network calls
+    mockFetch.mockImplementation(() => 
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(MOCK_RESPONSES.hubInfo),
+        headers: {
+          get: (key: string) => key === 'Content-Type' ? 'application/json' : null,
+        },
+      })
+    );
+    
+    hubClient = new HubClient(mockHubConfigs, mockFetch);
   });
 
   describe('Constructor', () => {
     it('should initialize with provided hub configs', () => {
-      const client = new HubClient(mockHubConfigs);
+      const client = new HubClient(mockHubConfigs, mockFetch);
       expect(client.getCurrentHub()).toEqual(mockHubConfigs[0]);
     });
 
     it('should throw error when no hubs provided', () => {
-      expect(() => new HubClient([])).toThrow('At least one hub configuration is required');
+      expect(() => new HubClient([], mockFetch)).toThrow('At least one hub configuration is required');
     });
   });
 
@@ -78,7 +138,7 @@ describe('HubClient', () => {
       });
 
       // Force to use second hub
-      hubClient = new HubClient([mockHubConfigs[1]]);
+      hubClient = new HubClient([mockHubConfigs[1]], mockFetch);
 
       await hubClient.request('/test');
 
@@ -94,20 +154,20 @@ describe('HubClient', () => {
     });
 
     it('should handle HTTP errors', async () => {
-      // Mock all hubs to return 404 error  
-      mockFetch.mockResolvedValue({
+      // Create a fresh mock for this test
+      const errorMockFetch = vi.fn().mockImplementation(() => Promise.resolve({
         ok: false,
         status: 404,
         statusText: 'Not Found',
         headers: {
           get: () => null,
         },
-      });
+      }));
 
-      await expect(hubClient.request('/test')).rejects.toThrow();
+      // Create a new client instance with the error mock
+      const errorTestClient = new HubClient(mockHubConfigs, errorMockFetch);
       
-      // Reset mock for subsequent tests
-      mockFetch.mockClear();
+      await expect(errorTestClient.request('/test')).rejects.toThrow('HTTP 404: Not Found');
     });
   });
 
@@ -319,7 +379,7 @@ describe('HubClient', () => {
 
   describe('Edge Cases', () => {
     it('should handle single hub configuration', () => {
-      const singleHubClient = new HubClient([mockHubConfigs[0]]);
+      const singleHubClient = new HubClient([mockHubConfigs[0]], mockFetch);
       expect(singleHubClient.getCurrentHub()).toEqual(mockHubConfigs[0]);
     });
 

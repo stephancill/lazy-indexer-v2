@@ -15,8 +15,11 @@ export async function runMigrations() {
   try {
     console.log('Starting database migrations...');
     
-    // Run migrations from the drizzle directory
-    await migrate(db, { migrationsFolder: 'drizzle' });
+    // Run migrations from the drizzle directory in project root
+    const migrationsPath = process.cwd().includes('packages') || process.cwd().includes('apps') 
+      ? '../../drizzle'
+      : './drizzle';
+    await migrate(db, { migrationsFolder: migrationsPath });
     
     console.log('Database migrations completed successfully!');
   } catch (error) {
