@@ -4,6 +4,11 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
+    testTimeout: 30000, // 30 seconds timeout
+    exclude: [
+      '**/node_modules/**',
+      '**/dist/**'
+    ],
     coverage: {
       reporter: ['text', 'html', 'json'],
       exclude: [

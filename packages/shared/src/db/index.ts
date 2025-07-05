@@ -1,14 +1,35 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { config } from '../config.js';
+import { config, isProduction, isDevelopment, isTest } from '../config.js';
 import * as schema from './schema.js';
+import { CONNECTION_POOL_CONFIG } from './optimizations.js';
 
-// Create a connection pool for the main database
+// Get appropriate connection pool configuration based on environment
+function getConnectionConfig() {
+  if (isProduction()) {
+    return CONNECTION_POOL_CONFIG.PRODUCTION;
+  } else if (isTest()) {
+    return CONNECTION_POOL_CONFIG.TEST;
+  } else {
+    return CONNECTION_POOL_CONFIG.DEVELOPMENT;
+  }
+}
+
+// Create a connection pool for the main database with optimized settings
+const poolConfig = getConnectionConfig();
 const queryClient = postgres(config.postgres.connectionString, {
-  max: config.postgres.poolSize || 10,
-  idle_timeout: 20,
-  max_lifetime: 60 * 30, // 30 minutes
-  onnotice: config.postgres.logQueries ? console.log : () => {},
+  ...poolConfig,
+  onnotice: config.postgres?.logQueries ? console.log : () => {},
+  transform: {
+    undefined: null, // Convert undefined to null for PostgreSQL compatibility
+  },
+  connection: {
+    application_name: 'farcaster-indexer',
+    // Enable connection pooling optimizations
+    'tcp_keepalives_idle': '600',
+    'tcp_keepalives_interval': '30',
+    'tcp_keepalives_count': '3',
+  },
 });
 
 // Create Drizzle database instance
@@ -20,7 +41,11 @@ let testDb: ReturnType<typeof drizzle> | null = null;
 
 export function getTestDb() {
   if (!testDb) {
-    testClient = postgres(config.postgres.testConnectionString || config.postgres.connectionString, {
+    // Use test configuration when in test environment
+    const { getTestConfig, isTest } = require('../config.js');
+    const testConfig = isTest() ? getTestConfig() : config;
+    
+    testClient = postgres(testConfig.postgres.connectionString, {
       max: 5,
       idle_timeout: 10,
       max_lifetime: 60 * 10, // 10 minutes

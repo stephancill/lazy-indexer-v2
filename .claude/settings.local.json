@@ -26,7 +26,8 @@
       "Bash(rg:*)",
       "Bash(curl:*)",
       "Bash(node test-api-endpoints.js)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx vitest:*)"
     ],
     "deny": []
   }

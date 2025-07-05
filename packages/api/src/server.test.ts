@@ -26,8 +26,12 @@ describe('API Server', () => {
 
   describe('CORS Headers', () => {
     it('should include CORS headers for API routes', async () => {
-      const res = await app.request('/api/v1/non-existent');
-      expect(res.headers.get('Access-Control-Allow-Origin')).toBeTruthy();
+      const res = await app.request('/api/v1/non-existent', {
+        headers: {
+          'Origin': 'http://localhost:3000'
+        }
+      });
+      expect(res.headers.get('Access-Control-Allow-Origin')).toBe('http://localhost:3000');
     });
   });
 

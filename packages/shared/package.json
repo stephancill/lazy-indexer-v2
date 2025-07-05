@@ -8,6 +8,10 @@
     ".": {
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
+    },
+    "./test/setup.js": {
+      "import": "./test/setup.js",
+      "types": "./test/setup.d.ts"
     }
   },
   "scripts": {
