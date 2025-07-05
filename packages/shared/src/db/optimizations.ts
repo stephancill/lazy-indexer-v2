@@ -509,7 +509,7 @@ export class QueryOptimizer {
   /**
    * Get optimized feed query for a user
    */
-  static getFeedQuery(userFid: number, limit: number = 50, offset: number = 0) {
+  static getFeedQuery(userFid: number, limit = 50, offset = 0) {
     return sql`
       SELECT 
         c.hash,
@@ -537,7 +537,7 @@ export class QueryOptimizer {
   /**
    * Get optimized user engagement query
    */
-  static getUserEngagementQuery(userFid: number, days: number = 30) {
+  static getUserEngagementQuery(userFid: number, days = 30) {
     return sql`
       SELECT 
         COUNT(*) FILTER (WHERE r.type = 'like') as likes_received,
@@ -553,7 +553,7 @@ export class QueryOptimizer {
   /**
    * Get optimized trending content query
    */
-  static getTrendingQuery(hours: number = 24, limit: number = 50) {
+  static getTrendingQuery(hours = 24, limit = 50) {
     return sql`
       SELECT 
         c.hash,

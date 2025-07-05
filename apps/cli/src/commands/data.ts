@@ -38,11 +38,11 @@ export const exportCommand = new Command("export")
         tables: {},
       };
 
-      const limit = parseInt(options.limit) || undefined;
+      const limit = Number.parseInt(options.limit) || undefined;
       const fidList = options.fids
         ? options.fids
             .split(",")
-            .map((f: string) => parseInt(f.trim()))
+            .map((f: string) => Number.parseInt(f.trim()))
             .filter((f: number) => !isNaN(f))
         : undefined;
 

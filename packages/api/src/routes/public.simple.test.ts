@@ -21,7 +21,7 @@ describe("Simple Public Routes Test", () => {
 
     app.get("/users/:fid", (c) => {
       const fid = c.req.param("fid");
-      const fidNum = parseInt(fid);
+      const fidNum = Number.parseInt(fid);
 
       if (isNaN(fidNum) || fidNum <= 0) {
         return c.json({ error: "Invalid FID" }, 400);

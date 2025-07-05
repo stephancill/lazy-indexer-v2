@@ -303,7 +303,7 @@ export const healthCommand = new Command("health")
           logger.info(
             `Uptime: ${
               uptime
-                ? Math.floor(parseInt(uptime) / 86400) + " days"
+                ? Math.floor(Number.parseInt(uptime) / 86400) + " days"
                 : "Unknown"
             }`
           );

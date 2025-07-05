@@ -1,4 +1,4 @@
-import { Context, Next } from "hono";
+import type { Context, Next } from "hono";
 
 // Input validation helpers
 export const validateFid = (fid: any): number | null => {
@@ -15,7 +15,7 @@ export const validateFid = (fid: any): number | null => {
     return null;
   }
 
-  const parsed = parseInt(fidStr, 10);
+  const parsed = Number.parseInt(fidStr, 10);
 
   // Check for valid range and safe integer
   if (isNaN(parsed) || parsed <= 0 || !Number.isSafeInteger(parsed)) {
@@ -26,8 +26,8 @@ export const validateFid = (fid: any): number | null => {
 };
 
 export const validatePagination = (limit?: string, offset?: string) => {
-  const parsedLimit = Math.min(parseInt(limit || "50"), 100);
-  const parsedOffset = Math.max(parseInt(offset || "0"), 0);
+  const parsedLimit = Math.min(Number.parseInt(limit || "50"), 100);
+  const parsedOffset = Math.max(Number.parseInt(offset || "0"), 0);
 
   return {
     limit: isNaN(parsedLimit) ? 50 : parsedLimit,

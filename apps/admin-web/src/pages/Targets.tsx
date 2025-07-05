@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -55,7 +56,7 @@ const Targets: React.FC = () => {
     if (!fid) return;
 
     const isRoot = confirm("Is this a root target?");
-    createTargetMutation.mutate({ fid: parseInt(fid), isRoot });
+    createTargetMutation.mutate({ fid: Number.parseInt(fid), isRoot });
   };
 
   const handleRemoveTarget = (fid: number) => {

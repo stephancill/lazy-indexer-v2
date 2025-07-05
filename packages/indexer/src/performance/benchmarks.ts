@@ -33,8 +33,8 @@ export interface BenchmarkSuite {
 }
 
 export class PerformanceBenchmark {
-  private startTime: number = 0;
-  private name: string = "";
+  private startTime = 0;
+  private name = "";
   private memoryBefore: NodeJS.MemoryUsage = process.memoryUsage();
 
   /**
@@ -366,7 +366,7 @@ export class SystemMonitor {
   /**
    * Start monitoring system performance
    */
-  start(intervalMs: number = 5000): void {
+  start(intervalMs = 5000): void {
     if (this.intervalId) {
       this.stop();
     }

@@ -141,13 +141,13 @@ export const CacheKeys = {
 
   // User data caching
   USER_PROFILE: (fid: number) => `user:${fid}:profile`,
-  USER_CASTS: (fid: number, page: number = 1) => `user:${fid}:casts:${page}`,
+  USER_CASTS: (fid: number, page = 1) => `user:${fid}:casts:${page}`,
   USER_FOLLOWERS: (fid: number) => `user:${fid}:followers`,
   USER_FOLLOWING: (fid: number) => `user:${fid}:following`,
 
   // Feed caching
-  USER_FEED: (fid: number, page: number = 1) => `feed:${fid}:${page}`,
-  TRENDING_FEED: (hours: number = 24) => `trending:${hours}h`,
+  USER_FEED: (fid: number, page = 1) => `feed:${fid}:${page}`,
+  TRENDING_FEED: (hours = 24) => `trending:${hours}h`,
 
   // Event processing
   LAST_EVENT_ID: "sync:last_event_id",
@@ -320,7 +320,7 @@ export class RedisCache {
   /**
    * Increment a numeric value
    */
-  async incr(key: string, by: number = 1): Promise<number> {
+  async incr(key: string, by = 1): Promise<number> {
     try {
       if (by === 1) {
         return await this.client.incr(key);
@@ -363,7 +363,7 @@ export class RedisCache {
     key: string,
     fetcher: () => Promise<T>,
     ttl: number = CacheTTL.MEDIUM,
-    lockTtl: number = 30
+    lockTtl = 30
   ): Promise<T> {
     // Try to get from cache first
     const cached = await this.get<T>(key);

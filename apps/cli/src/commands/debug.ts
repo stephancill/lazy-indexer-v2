@@ -16,7 +16,7 @@ export const debugCommand = new Command("debug")
       .option("--json", "Output as JSON")
       .action(async (fid, options) => {
         try {
-          const fidNum = parseInt(fid);
+          const fidNum = Number.parseInt(fid);
           if (isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
@@ -187,7 +187,7 @@ export const debugCommand = new Command("debug")
       .option("--json", "Output as JSON")
       .action(async (fid, options) => {
         try {
-          const fidNum = parseInt(fid);
+          const fidNum = Number.parseInt(fid);
           if (isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);

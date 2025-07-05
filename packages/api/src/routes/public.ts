@@ -9,7 +9,7 @@ const publicRoutes = new Hono();
 // Get user profile
 publicRoutes.get("/users/:fid", async (c) => {
   try {
-    const fid = parseInt(c.req.param("fid"));
+    const fid = Number.parseInt(c.req.param("fid"));
 
     if (isNaN(fid) || fid <= 0) {
       return c.json({ error: "Invalid FID" }, 400);
@@ -112,9 +112,9 @@ publicRoutes.get("/casts/:hash", async (c) => {
 // Get feed for a user (casts from users they follow)
 publicRoutes.get("/feed/:fid", async (c) => {
   try {
-    const fid = parseInt(c.req.param("fid"));
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     if (isNaN(fid) || fid <= 0) {
       return c.json({ error: "Invalid FID" }, 400);
@@ -170,9 +170,9 @@ publicRoutes.get("/feed/:fid", async (c) => {
 // Get user's casts
 publicRoutes.get("/users/:fid/casts", async (c) => {
   try {
-    const fid = parseInt(c.req.param("fid"));
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     if (isNaN(fid) || fid <= 0) {
       return c.json({ error: "Invalid FID" }, 400);
@@ -212,9 +212,9 @@ publicRoutes.get("/users/:fid/casts", async (c) => {
 // Get user's followers
 publicRoutes.get("/users/:fid/followers", async (c) => {
   try {
-    const fid = parseInt(c.req.param("fid"));
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     if (isNaN(fid) || fid <= 0) {
       return c.json({ error: "Invalid FID" }, 400);
@@ -254,9 +254,9 @@ publicRoutes.get("/users/:fid/followers", async (c) => {
 // Get user's following
 publicRoutes.get("/users/:fid/following", async (c) => {
   try {
-    const fid = parseInt(c.req.param("fid"));
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     if (isNaN(fid) || fid <= 0) {
       return c.json({ error: "Invalid FID" }, 400);
@@ -296,8 +296,8 @@ publicRoutes.get("/users/:fid/following", async (c) => {
 // Get trending casts (by reactions in last 24 hours)
 publicRoutes.get("/trending", async (c) => {
   try {
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     // Get casts with reaction counts from last 24 hours
     const trendingCasts = await db

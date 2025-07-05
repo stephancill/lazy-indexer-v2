@@ -1,15 +1,15 @@
-import { db, HubClient, schema } from "@farcaster-indexer/shared";
-import { eq, and } from "drizzle-orm";
-import type { BackfillJob } from "../queue.js";
-import { addTargetToSet, scheduleBackfillJob } from "../queue.js";
+import { type HubClient, db, schema } from "@farcaster-indexer/shared";
 import type {
   CastMessage,
-  ReactionMessage,
   LinkMessage,
-  VerificationMessage,
-  UserDataMessage,
   OnChainEvent,
+  ReactionMessage,
+  UserDataMessage,
+  VerificationMessage,
 } from "@farcaster-indexer/shared";
+import { and, eq } from "drizzle-orm";
+import type { BackfillJob } from "../queue.js";
+import { addTargetToSet, scheduleBackfillJob } from "../queue.js";
 
 export class BackfillWorker {
   private hubClient: HubClient;

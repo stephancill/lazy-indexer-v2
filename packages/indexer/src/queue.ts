@@ -1,4 +1,4 @@
-import { Queue, Worker, QueueEvents, Job } from "bullmq";
+import { Queue, Worker, QueueEvents, type Job } from "bullmq";
 import { Redis } from "ioredis";
 import { config } from "@farcaster-indexer/shared";
 import type {

@@ -31,15 +31,15 @@ export const useDashboardStats = () => {
 
       return {
         targets: {
-          total: parseInt(statsData.targets?.total || "0"),
-          root: parseInt(statsData.targets?.root || "0"),
+          total: Number.parseInt(statsData.targets?.total || "0"),
+          root: Number.parseInt(statsData.targets?.root || "0"),
           synced:
-            parseInt(statsData.targets?.total || "0") -
-            parseInt(statsData.targets?.root || "0"),
+            Number.parseInt(statsData.targets?.total || "0") -
+            Number.parseInt(statsData.targets?.root || "0"),
           unsynced: 0,
         },
         clientTargets: {
-          total: parseInt(statsData.targets?.clients || "0"),
+          total: Number.parseInt(statsData.targets?.clients || "0"),
         },
         jobs: totalJobs,
         system: {

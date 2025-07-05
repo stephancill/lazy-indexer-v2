@@ -396,8 +396,8 @@ adminRoutes.post("/targets/:fid/backfill", async (c) => {
 // Get all client targets
 adminRoutes.get("/client-targets", async (c) => {
   try {
-    const limit = Math.min(parseInt(c.req.query("limit") || "50"), 100);
-    const offset = Math.max(parseInt(c.req.query("offset") || "0"), 0);
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
     const clientTargets = await db.query.targetClients.findMany({
       orderBy: [desc(targetClients.addedAt)],

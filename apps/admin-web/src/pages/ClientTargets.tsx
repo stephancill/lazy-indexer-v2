@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -28,7 +29,7 @@ const ClientTargets: React.FC = () => {
   const handleAddClientTarget = () => {
     if (!newFid.trim()) return;
 
-    const fid = parseInt(newFid.trim());
+    const fid = Number.parseInt(newFid.trim());
     if (isNaN(fid) || fid <= 0) {
       return;
     }

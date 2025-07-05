@@ -1,4 +1,4 @@
-import { db, HubClient, schema } from "@farcaster-indexer/shared";
+import { db, type HubClient, schema } from "@farcaster-indexer/shared";
 import { eq, and } from "drizzle-orm";
 import type { RealtimeSyncJob } from "../queue.js";
 import {

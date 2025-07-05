@@ -23,7 +23,7 @@ const REQUEST_TIMEOUT = 30000; // 30 seconds
 
 export class HubClient {
   private currentHubIndex = 0;
-  private rateLimitUntil: number = 0;
+  private rateLimitUntil = 0;
   private requestCount = 0;
   private lastRequestTime = 0;
   private fetchFn: typeof fetch;
@@ -153,14 +153,14 @@ export class HubClient {
     const rateLimitReset = response.headers.get("x-ratelimit-reset");
 
     if (rateLimitRemaining === "0" && rateLimitReset) {
-      this.rateLimitUntil = parseInt(rateLimitReset) * 1000;
+      this.rateLimitUntil = Number.parseInt(rateLimitReset) * 1000;
     }
 
     // Handle 429 Too Many Requests
     if (response.status === 429) {
       const retryAfter = response.headers.get("retry-after");
       if (retryAfter) {
-        this.rateLimitUntil = Date.now() + parseInt(retryAfter) * 1000;
+        this.rateLimitUntil = Date.now() + Number.parseInt(retryAfter) * 1000;
       } else {
         this.rateLimitUntil = Date.now() + 60000; // Default 1 minute
       }

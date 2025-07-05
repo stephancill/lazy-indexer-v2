@@ -253,7 +253,7 @@ describe("Worker Logic Unit Tests", () => {
 
     it("should handle job priority logic", () => {
       // Test job priority assignment patterns
-      const getJobPriority = (jobType: string, isRoot: boolean = false) => {
+      const getJobPriority = (jobType: string, isRoot = false) => {
         switch (jobType) {
           case "backfill":
             return isRoot ? 1 : 2; // Root targets get higher priority

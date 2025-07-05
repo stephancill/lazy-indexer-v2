@@ -2,7 +2,10 @@
   "name": "farcaster-indexer",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "setup": "./scripts/dev.sh",
     "dev": "concurrently \"npm run dev:indexer\" \"npm run dev:api\" \"npm run dev:web\"",

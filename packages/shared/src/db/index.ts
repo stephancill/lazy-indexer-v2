@@ -124,8 +124,8 @@ export async function batchInsert<T extends Record<string, any>>(
 // Utility function for safe database operations
 export async function safeDbOperation<T>(
   operation: () => Promise<T>,
-  retries: number = 3,
-  delay: number = 1000
+  retries = 3,
+  delay = 1000
 ): Promise<T> {
   for (let i = 0; i < retries; i++) {
     try {
@@ -147,9 +147,9 @@ export async function safeDbOperation<T>(
 
 // Query building helpers
 export function buildPaginationQuery(
-  page: number = 1,
-  limit: number = 50,
-  maxLimit: number = 1000
+  page = 1,
+  limit = 50,
+  maxLimit = 1000
 ) {
   const safeLimit = Math.min(Math.max(limit, 1), maxLimit);
   const offset = (Math.max(page, 1) - 1) * safeLimit;

@@ -16,7 +16,7 @@ interface JobStatsResponse {
   };
 }
 
-export const useJobs = (autoRefresh: boolean = false) => {
+export const useJobs = (autoRefresh = false) => {
   return useQuery({
     queryKey: ["jobs"],
     queryFn: async (): Promise<JobsResponse> => {

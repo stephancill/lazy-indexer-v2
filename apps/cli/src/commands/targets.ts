@@ -25,10 +25,10 @@ export const targetCommands = new Command("targets")
         try {
           logger.startSpinner("Fetching targets...");
 
-          const limit = Math.min(parseInt(options.limit), 1000);
-          const offset = Math.max(parseInt(options.offset), 0);
+          const limit = Math.min(Number.parseInt(options.limit), 1000);
+          const offset = Math.max(Number.parseInt(options.offset), 0);
 
-          let whereConditions = [];
+          const whereConditions = [];
           if (options.rootOnly) {
             whereConditions.push(eq(targets.isRoot, true));
           }
@@ -91,7 +91,7 @@ export const targetCommands = new Command("targets")
       .option("--root", "Add as root target")
       .action(async (fid, options) => {
         try {
-          const fidNum = parseInt(fid);
+          const fidNum = Number.parseInt(fid);
           if (isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
@@ -136,7 +136,7 @@ export const targetCommands = new Command("targets")
         }
 
         try {
-          const fidNum = parseInt(fid);
+          const fidNum = Number.parseInt(fid);
           if (isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
@@ -251,7 +251,7 @@ export const targetCommands = new Command("targets")
           .argument("<fid>", "Client FID to add")
           .action(async (fid) => {
             try {
-              const fidNum = parseInt(fid);
+              const fidNum = Number.parseInt(fid);
               if (isNaN(fidNum) || fidNum <= 0) {
                 logger.error("FID must be a positive number");
                 process.exit(1);
@@ -294,7 +294,7 @@ export const targetCommands = new Command("targets")
             }
 
             try {
-              const fidNum = parseInt(fid);
+              const fidNum = Number.parseInt(fid);
               if (isNaN(fidNum) || fidNum <= 0) {
                 logger.error("FID must be a positive number");
                 process.exit(1);

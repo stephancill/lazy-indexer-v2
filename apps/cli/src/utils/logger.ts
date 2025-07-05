@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import ora, { Ora } from "ora";
+import ora, { type Ora } from "ora";
 
 export class Logger {
   private static instance: Logger;
@@ -54,7 +54,7 @@ export class Logger {
     }
   }
 
-  stopSpinner(success: boolean = true, message?: string): void {
+  stopSpinner(success = true, message?: string): void {
     if (this.spinner) {
       if (success) {
         this.spinner.succeed(message);

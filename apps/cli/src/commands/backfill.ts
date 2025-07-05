@@ -25,7 +25,7 @@ export const backfillCommand = new Command("backfill")
           let targetsToBackfill;
 
           if (options.fid) {
-            const fidNum = parseInt(options.fid);
+            const fidNum = Number.parseInt(options.fid);
             if (isNaN(fidNum) || fidNum <= 0) {
               logger.error("FID must be a positive number");
               process.exit(1);
@@ -41,7 +41,7 @@ export const backfillCommand = new Command("backfill")
               process.exit(1);
             }
           } else {
-            let whereConditions = [isNull(targets.lastSyncedAt)];
+            const whereConditions = [isNull(targets.lastSyncedAt)];
 
             if (options.rootOnly) {
               whereConditions.push(eq(targets.isRoot, true));
@@ -58,8 +58,8 @@ export const backfillCommand = new Command("backfill")
               .where(whereClause)
               .$dynamic();
 
-            if (options.limit && parseInt(options.limit) > 0) {
-              query = query.limit(parseInt(options.limit));
+            if (options.limit && Number.parseInt(options.limit) > 0) {
+              query = query.limit(Number.parseInt(options.limit));
             }
 
             targetsToBackfill = await query;
@@ -155,7 +155,7 @@ export const backfillCommand = new Command("backfill")
           logger.startSpinner("Retrying failed backfill jobs...");
 
           if (options.fid) {
-            const fidNum = parseInt(options.fid);
+            const fidNum = Number.parseInt(options.fid);
             if (isNaN(fidNum) || fidNum <= 0) {
               logger.error("FID must be a positive number");
               process.exit(1);

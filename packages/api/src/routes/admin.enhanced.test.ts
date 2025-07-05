@@ -73,7 +73,7 @@ vi.mock("../middleware/auth.js", () => ({
 // Mock validation module
 vi.mock("../middleware/validation.js", () => ({
   validateFid: vi.fn((fid) => {
-    const parsed = parseInt(fid);
+    const parsed = Number.parseInt(fid);
     return isNaN(parsed) || parsed <= 0 ? null : parsed;
   }),
   validateQueueName: vi.fn((queue) => {
@@ -82,13 +82,13 @@ vi.mock("../middleware/validation.js", () => ({
   }),
   validateTargetBody: vi.fn((body) => {
     if (!body?.fid) return "Valid FID is required";
-    const fid = parseInt(body.fid);
+    const fid = Number.parseInt(body.fid);
     if (isNaN(fid) || fid <= 0) return "Valid FID is required";
     return { fid, isRoot: body.isRoot === true };
   }),
   validateClientTargetBody: vi.fn((body) => {
     if (!body?.clientFid) return "Valid client FID is required";
-    const clientFid = parseInt(body.clientFid);
+    const clientFid = Number.parseInt(body.clientFid);
     if (isNaN(clientFid) || clientFid <= 0)
       return "Valid client FID is required";
     return { clientFid };
@@ -98,8 +98,8 @@ vi.mock("../middleware/validation.js", () => ({
     return { isRoot: body.isRoot };
   }),
   validatePagination: vi.fn((limit, offset) => ({
-    limit: Math.min(parseInt(limit || "50"), 100),
-    offset: Math.max(parseInt(offset || "0"), 0),
+    limit: Math.min(Number.parseInt(limit || "50"), 100),
+    offset: Math.max(Number.parseInt(offset || "0"), 0),
   })),
   validateSortOrder: vi.fn((order) => (order === "asc" ? "asc" : "desc")),
   validateDate: vi.fn((dateString) => {
