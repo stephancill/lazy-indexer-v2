@@ -1,11 +1,11 @@
 /**
  * Performance benchmarking utilities for the Farcaster Indexer
- * 
+ *
  * This module provides benchmarking tools to measure and monitor
  * the performance of various system components.
  */
 
-import { performance } from 'perf_hooks';
+import { performance } from "perf_hooks";
 
 export interface BenchmarkResult {
   name: string;
@@ -34,7 +34,7 @@ export interface BenchmarkSuite {
 
 export class PerformanceBenchmark {
   private startTime: number = 0;
-  private name: string = '';
+  private name: string = "";
   private memoryBefore: NodeJS.MemoryUsage = process.memoryUsage();
 
   /**
@@ -131,10 +131,7 @@ export class BenchmarkSuiteRunner {
   /**
    * Run a benchmark and add it to the suite
    */
-  async runBenchmark<T>(
-    name: string,
-    fn: () => Promise<T>
-  ): Promise<T> {
+  async runBenchmark<T>(name: string, fn: () => Promise<T>): Promise<T> {
     const { result, benchmark } = await PerformanceBenchmark.measure(name, fn);
     this.addResult(benchmark);
     return result;
@@ -153,7 +150,7 @@ export class BenchmarkSuiteRunner {
    * Get the complete suite results with statistics
    */
   getResults(): BenchmarkSuite {
-    const durations = this.results.map(r => r.duration);
+    const durations = this.results.map((r) => r.duration);
     const totalDuration = durations.reduce((sum, d) => sum + d, 0);
     const averageDuration = totalDuration / durations.length;
     const minDuration = Math.min(...durations);
@@ -189,28 +186,28 @@ export class BenchmarkSuiteRunner {
    */
   generateReport(): string {
     const suite = this.getResults();
-    
+
     let report = `\n📊 Benchmark Suite: ${suite.name}\n`;
-    report += `${'='.repeat(50)}\n`;
+    report += `${"=".repeat(50)}\n`;
     report += `Total Duration: ${suite.totalDuration.toFixed(2)}ms\n`;
     report += `Average Duration: ${suite.averageDuration.toFixed(2)}ms\n`;
     report += `Min Duration: ${suite.minDuration.toFixed(2)}ms\n`;
     report += `Max Duration: ${suite.maxDuration.toFixed(2)}ms\n`;
     report += `Tests Run: ${suite.results.length}\n`;
-    
+
     if (suite.memoryLeakDetected) {
       report += `⚠️  Potential memory leak detected!\n`;
     }
-    
+
     report += `\n📋 Individual Results:\n`;
-    report += `${'-'.repeat(50)}\n`;
-    
-    suite.results.forEach(result => {
+    report += `${"-".repeat(50)}\n`;
+
+    suite.results.forEach((result) => {
       const memoryMB = result.memoryDelta.heapUsed / (1024 * 1024);
       report += `${result.name.padEnd(30)} ${result.duration.toFixed(2)}ms`;
-      report += ` (${memoryMB > 0 ? '+' : ''}${memoryMB.toFixed(2)}MB)\n`;
+      report += ` (${memoryMB > 0 ? "+" : ""}${memoryMB.toFixed(2)}MB)\n`;
     });
-    
+
     return report;
   }
 }
@@ -222,16 +219,13 @@ export class DatabaseBenchmarks {
   private suite: BenchmarkSuiteRunner;
 
   constructor() {
-    this.suite = new BenchmarkSuiteRunner('Database Operations');
+    this.suite = new BenchmarkSuiteRunner("Database Operations");
   }
 
   /**
    * Benchmark a database query
    */
-  async benchmarkQuery<T>(
-    name: string,
-    queryFn: () => Promise<T>
-  ): Promise<T> {
+  async benchmarkQuery<T>(name: string, queryFn: () => Promise<T>): Promise<T> {
     return await this.suite.runBenchmark(`DB Query: ${name}`, queryFn);
   }
 
@@ -284,7 +278,7 @@ export class APIBenchmarks {
   private suite: BenchmarkSuiteRunner;
 
   constructor() {
-    this.suite = new BenchmarkSuiteRunner('API Endpoints');
+    this.suite = new BenchmarkSuiteRunner("API Endpoints");
   }
 
   /**
@@ -326,16 +320,13 @@ export class JobBenchmarks {
   private suite: BenchmarkSuiteRunner;
 
   constructor() {
-    this.suite = new BenchmarkSuiteRunner('Job Processing');
+    this.suite = new BenchmarkSuiteRunner("Job Processing");
   }
 
   /**
    * Benchmark a job processing operation
    */
-  async benchmarkJob<T>(
-    jobType: string,
-    jobFn: () => Promise<T>
-  ): Promise<T> {
+  async benchmarkJob<T>(jobType: string, jobFn: () => Promise<T>): Promise<T> {
     return await this.suite.runBenchmark(`Job: ${jobType}`, jobFn);
   }
 
@@ -421,7 +412,7 @@ export class SystemMonitor {
    * Get measurements history
    */
   getMeasurements() {
-    return this.measurements.map(m => ({
+    return this.measurements.map((m) => ({
       timestamp: m.timestamp,
       memory: {
         heapUsed: m.memory.heapUsed / (1024 * 1024),
@@ -445,22 +436,22 @@ export class SystemMonitor {
    */
   generateReport(): string {
     if (this.measurements.length === 0) {
-      return 'No measurements available';
+      return "No measurements available";
     }
 
     const measurements = this.getMeasurements();
     const latest = measurements[measurements.length - 1];
     const first = measurements[0];
-    
+
     const memoryGrowth = latest.memory.heapUsed - first.memory.heapUsed;
     const timespan = latest.timestamp - first.timestamp;
 
     let report = `\n🖥️  System Monitor Report\n`;
-    report += `${'='.repeat(50)}\n`;
+    report += `${"=".repeat(50)}\n`;
     report += `Monitoring Period: ${(timespan / 1000).toFixed(1)}s\n`;
     report += `Measurements: ${measurements.length}\n`;
     report += `Current Memory Usage: ${latest.memory.heapUsed.toFixed(2)}MB\n`;
-    report += `Memory Growth: ${memoryGrowth > 0 ? '+' : ''}${memoryGrowth.toFixed(2)}MB\n`;
+    report += `Memory Growth: ${memoryGrowth > 0 ? "+" : ""}${memoryGrowth.toFixed(2)}MB\n`;
     report += `System Uptime: ${latest.uptime.toFixed(1)}s\n`;
 
     // Memory trend analysis
@@ -491,7 +482,7 @@ export const benchmarks = {
  */
 export function generatePerformanceReport(): string {
   let report = `\n🚀 Farcaster Indexer Performance Report\n`;
-  report += `${'='.repeat(60)}\n`;
+  report += `${"=".repeat(60)}\n`;
   report += `Generated: ${new Date().toISOString()}\n`;
 
   // System monitor report
@@ -526,15 +517,15 @@ export const PERFORMANCE_THRESHOLDS = {
   DATABASE_QUERY_MAX: 100,
   DATABASE_INSERT_MAX: 50,
   DATABASE_BULK_INSERT_MAX: 500,
-  
+
   // API endpoint thresholds (ms)
   API_RESPONSE_MAX: 500,
   API_FEED_MAX: 1000,
-  
+
   // Job processing thresholds (ms)
   JOB_PROCESS_EVENT_MAX: 100,
   JOB_BACKFILL_USER_MAX: 5000,
-  
+
   // Memory thresholds (MB)
   MEMORY_LEAK_THRESHOLD: 50,
   MEMORY_USAGE_MAX: 500,
@@ -554,24 +545,36 @@ export function validatePerformance(): {
   // Check database benchmarks
   const dbResults = benchmarks.database.getResults();
   if (dbResults.averageDuration > PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX) {
-    failures.push(`Database average duration ${dbResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX}ms`);
+    failures.push(
+      `Database average duration ${dbResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX}ms`
+    );
   }
 
   // Check API benchmarks
   const apiResults = benchmarks.api.getResults();
   if (apiResults.averageDuration > PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX) {
-    failures.push(`API average duration ${apiResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX}ms`);
+    failures.push(
+      `API average duration ${apiResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX}ms`
+    );
   }
 
   // Check job benchmarks
   const jobResults = benchmarks.jobs.getResults();
-  if (jobResults.averageDuration > PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX) {
-    warnings.push(`Job average duration ${jobResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX}ms`);
+  if (
+    jobResults.averageDuration > PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX
+  ) {
+    warnings.push(
+      `Job average duration ${jobResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX}ms`
+    );
   }
 
   // Check memory leaks
-  if (dbResults.memoryLeakDetected || apiResults.memoryLeakDetected || jobResults.memoryLeakDetected) {
-    failures.push('Memory leak detected in one or more benchmark suites');
+  if (
+    dbResults.memoryLeakDetected ||
+    apiResults.memoryLeakDetected ||
+    jobResults.memoryLeakDetected
+  ) {
+    failures.push("Memory leak detected in one or more benchmark suites");
   }
 
   return {

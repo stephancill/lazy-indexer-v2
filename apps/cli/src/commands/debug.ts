@@ -301,8 +301,8 @@ export const debugCommand = new Command("debug")
                   ttl === -1
                     ? "No expiration"
                     : ttl === -2
-                    ? "Expired/Not exists"
-                    : `${ttl} seconds`
+                      ? "Expired/Not exists"
+                      : `${ttl} seconds`
                 }`
               );
               logger.info(`Value:`);
@@ -355,8 +355,8 @@ export const debugCommand = new Command("debug")
                       info.ttl === -1
                         ? "No expiration"
                         : info.ttl === -2
-                        ? "Expired/Not exists"
-                        : info.ttl,
+                          ? "Expired/Not exists"
+                          : info.ttl,
                     Size: info.size,
                   }))
                 );

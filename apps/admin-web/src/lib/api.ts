@@ -109,7 +109,10 @@ export const api = {
     jobs: {
       list: () => apiClient.get("/api/admin/jobs"),
       backfill: () => apiClient.post("/api/admin/jobs/backfill"),
-      stats: (queue?: string) => apiClient.get(queue ? `/api/admin/jobs/${queue}/stats` : "/api/admin/jobs"),
+      stats: (queue?: string) =>
+        apiClient.get(
+          queue ? `/api/admin/jobs/${queue}/stats` : "/api/admin/jobs"
+        ),
     },
 
     // System health

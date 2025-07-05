@@ -1,12 +1,12 @@
 /**
  * Database optimization utilities for the Farcaster Indexer
- * 
+ *
  * This module provides database optimization strategies including
  * custom indexes, query optimization, and performance analysis.
  */
 
-import { sql } from 'drizzle-orm';
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { sql } from "drizzle-orm";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 /**
  * Advanced database indexes for performance optimization
@@ -190,8 +190,8 @@ export class DatabaseOptimizer {
    * Create all advanced indexes
    */
   async createAdvancedIndexes(): Promise<void> {
-    console.log('🔧 Creating advanced database indexes...');
-    
+    console.log("🔧 Creating advanced database indexes...");
+
     for (const [name, query] of Object.entries(ADVANCED_INDEXES)) {
       try {
         console.log(`Creating index: ${name}`);
@@ -207,8 +207,8 @@ export class DatabaseOptimizer {
    * Create optimized views
    */
   async createOptimizedViews(): Promise<void> {
-    console.log('📊 Creating optimized database views...');
-    
+    console.log("📊 Creating optimized database views...");
+
     for (const [name, query] of Object.entries(OPTIMIZED_VIEWS)) {
       try {
         console.log(`Creating view: ${name}`);
@@ -224,12 +224,20 @@ export class DatabaseOptimizer {
    * Analyze table statistics for query optimization
    */
   async analyzeTableStatistics(): Promise<void> {
-    console.log('📈 Analyzing table statistics...');
-    
+    console.log("📈 Analyzing table statistics...");
+
     const tables = [
-      'targets', 'target_clients', 'users', 'casts', 
-      'reactions', 'links', 'verifications', 'user_data',
-      'username_proofs', 'on_chain_events', 'sync_state'
+      "targets",
+      "target_clients",
+      "users",
+      "casts",
+      "reactions",
+      "links",
+      "verifications",
+      "user_data",
+      "username_proofs",
+      "on_chain_events",
+      "sync_state",
     ];
 
     for (const table of tables) {
@@ -251,11 +259,12 @@ export class DatabaseOptimizer {
     slowQueries: any[];
     cacheHitRatio: number;
   }> {
-    console.log('📊 Gathering performance metrics...');
+    console.log("📊 Gathering performance metrics...");
 
     try {
       // Index usage statistics
-      const indexUsage = await this.db.execute(sql.raw(`
+      const indexUsage = await this.db.execute(
+        sql.raw(`
         SELECT 
           schemaname,
           tablename,
@@ -266,10 +275,12 @@ export class DatabaseOptimizer {
         FROM pg_stat_user_indexes
         ORDER BY idx_scan DESC
         LIMIT 20;
-      `));
+      `)
+      );
 
       // Table statistics
-      const tableStats = await this.db.execute(sql.raw(`
+      const tableStats = await this.db.execute(
+        sql.raw(`
         SELECT 
           schemaname,
           tablename,
@@ -284,15 +295,18 @@ export class DatabaseOptimizer {
           last_autoanalyze
         FROM pg_stat_user_tables
         ORDER BY n_live_tup DESC;
-      `));
+      `)
+      );
 
       // Cache hit ratio
-      const cacheHitResult = await this.db.execute(sql.raw(`
+      const cacheHitResult = await this.db.execute(
+        sql.raw(`
         SELECT 
           sum(heap_blks_hit) * 100.0 / 
           NULLIF(sum(heap_blks_hit) + sum(heap_blks_read), 0) as cache_hit_ratio
         FROM pg_statio_user_tables;
-      `));
+      `)
+      );
 
       const cacheHitRatio = (cacheHitResult as any)[0]?.cache_hit_ratio || 0;
 
@@ -307,7 +321,7 @@ export class DatabaseOptimizer {
         cacheHitRatio: Number(cacheHitRatio),
       };
     } catch (error) {
-      console.warn('⚠️ Failed to gather performance metrics:', error);
+      console.warn("⚠️ Failed to gather performance metrics:", error);
       return {
         indexUsage: [],
         tableStats: [],
@@ -321,15 +335,15 @@ export class DatabaseOptimizer {
    * Optimize table maintenance
    */
   async performMaintenance(): Promise<void> {
-    console.log('🧹 Performing database maintenance...');
+    console.log("🧹 Performing database maintenance...");
 
     const maintenanceTasks = [
       // Update table statistics
-      'ANALYZE;',
-      
+      "ANALYZE;",
+
       // Vacuum dead tuples (non-blocking)
-      'VACUUM (ANALYZE);',
-      
+      "VACUUM (ANALYZE);",
+
       // Reindex heavily used indexes (do this during low traffic)
       // 'REINDEX INDEX CONCURRENTLY casts_fid_timestamp_idx;',
     ];
@@ -350,10 +364,10 @@ export class DatabaseOptimizer {
    */
   async generateRecommendations(): Promise<string[]> {
     const recommendations: string[] = [];
-    
+
     try {
       const metrics = await this.getPerformanceMetrics();
-      
+
       // Cache hit ratio recommendations
       if (metrics.cacheHitRatio < 95) {
         recommendations.push(
@@ -362,7 +376,9 @@ export class DatabaseOptimizer {
       }
 
       // Index usage recommendations
-      const unusedIndexes = metrics.indexUsage.filter(idx => idx.idx_scan < 10);
+      const unusedIndexes = metrics.indexUsage.filter(
+        (idx) => idx.idx_scan < 10
+      );
       if (unusedIndexes.length > 0) {
         recommendations.push(
           `Found ${unusedIndexes.length} potentially unused indexes. Consider dropping them.`
@@ -371,28 +387,29 @@ export class DatabaseOptimizer {
 
       // Dead tuple recommendations
       const tablesWithDeadTuples = metrics.tableStats.filter(
-        table => table.dead_tuples > table.live_tuples * 0.1
+        (table) => table.dead_tuples > table.live_tuples * 0.1
       );
       if (tablesWithDeadTuples.length > 0) {
         recommendations.push(
-          `Tables with high dead tuple ratio: ${tablesWithDeadTuples.map(t => t.tablename).join(', ')}. Consider VACUUM.`
+          `Tables with high dead tuple ratio: ${tablesWithDeadTuples.map((t) => t.tablename).join(", ")}. Consider VACUUM.`
         );
       }
 
       // Analyze recommendations
       const staleAnalyze = metrics.tableStats.filter(
-        table => !table.last_analyze || 
-        new Date(table.last_analyze).getTime() < Date.now() - 7 * 24 * 60 * 60 * 1000
+        (table) =>
+          !table.last_analyze ||
+          new Date(table.last_analyze).getTime() <
+            Date.now() - 7 * 24 * 60 * 60 * 1000
       );
       if (staleAnalyze.length > 0) {
         recommendations.push(
-          `Tables with stale statistics: ${staleAnalyze.map(t => t.tablename).join(', ')}. Run ANALYZE.`
+          `Tables with stale statistics: ${staleAnalyze.map((t) => t.tablename).join(", ")}. Run ANALYZE.`
         );
       }
-
     } catch (error) {
-      console.warn('Failed to generate recommendations:', error);
-      recommendations.push('Unable to analyze database for recommendations.');
+      console.warn("Failed to generate recommendations:", error);
+      recommendations.push("Unable to analyze database for recommendations.");
     }
 
     return recommendations;
@@ -402,47 +419,44 @@ export class DatabaseOptimizer {
    * Generate a comprehensive optimization report
    */
   async generateOptimizationReport(): Promise<string> {
-    console.log('📋 Generating optimization report...');
+    console.log("📋 Generating optimization report...");
 
     const metrics = await this.getPerformanceMetrics();
     const recommendations = await this.generateRecommendations();
 
-    let report = '\n🗄️ Database Optimization Report\n';
-    report += '=' .repeat(50) + '\n';
+    let report = "\n🗄️ Database Optimization Report\n";
+    report += "=".repeat(50) + "\n";
     report += `Generated: ${new Date().toISOString()}\n\n`;
 
     // Performance Overview
-    report += '📊 Performance Overview:\n';
-    report += '-'.repeat(30) + '\n';
+    report += "📊 Performance Overview:\n";
+    report += "-".repeat(30) + "\n";
     report += `Cache Hit Ratio: ${metrics.cacheHitRatio.toFixed(1)}%\n`;
     report += `Tables Analyzed: ${metrics.tableStats.length}\n`;
     report += `Indexes Monitored: ${metrics.indexUsage.length}\n\n`;
 
     // Top Tables by Size
-    report += '📈 Top Tables by Live Tuples:\n';
-    report += '-'.repeat(30) + '\n';
-    metrics.tableStats
-      .slice(0, 5)
-      .forEach(table => {
-        report += `${table.tablename}: ${table.live_tuples?.toLocaleString() || 0} rows\n`;
-      });
-    report += '\n';
+    report += "📈 Top Tables by Live Tuples:\n";
+    report += "-".repeat(30) + "\n";
+    metrics.tableStats.slice(0, 5).forEach((table) => {
+      report += `${table.tablename}: ${table.live_tuples?.toLocaleString() || 0} rows\n`;
+    });
+    report += "\n";
 
     // Top Indexes by Usage
-    report += '🔍 Top Indexes by Scans:\n';
-    report += '-'.repeat(30) + '\n';
-    metrics.indexUsage
-      .slice(0, 5)
-      .forEach(index => {
-        report += `${index.indexname}: ${index.idx_scan?.toLocaleString() || 0} scans\n`;
-      });
-    report += '\n';
+    report += "🔍 Top Indexes by Scans:\n";
+    report += "-".repeat(30) + "\n";
+    metrics.indexUsage.slice(0, 5).forEach((index) => {
+      report += `${index.indexname}: ${index.idx_scan?.toLocaleString() || 0} scans\n`;
+    });
+    report += "\n";
 
     // Recommendations
-    report += '💡 Optimization Recommendations:\n';
-    report += '-'.repeat(30) + '\n';
+    report += "💡 Optimization Recommendations:\n";
+    report += "-".repeat(30) + "\n";
     if (recommendations.length === 0) {
-      report += 'No specific recommendations at this time. Database appears well-optimized.\n';
+      report +=
+        "No specific recommendations at this time. Database appears well-optimized.\n";
     } else {
       recommendations.forEach((rec, i) => {
         report += `${i + 1}. ${rec}\n`;
@@ -459,12 +473,12 @@ export class DatabaseOptimizer {
 export const CONNECTION_POOL_CONFIG = {
   // Production settings
   PRODUCTION: {
-    max: 20,                    // Maximum connections
-    min: 5,                     // Minimum connections  
-    idle_timeout: 20,           // Seconds before closing idle connections
-    max_lifetime: 60 * 30,      // 30 minutes max connection lifetime
-    connect_timeout: 10,        // Connection timeout in seconds
-    prepare: false,             // Don't use prepared statements by default
+    max: 20, // Maximum connections
+    min: 5, // Minimum connections
+    idle_timeout: 20, // Seconds before closing idle connections
+    max_lifetime: 60 * 30, // 30 minutes max connection lifetime
+    connect_timeout: 10, // Connection timeout in seconds
+    prepare: false, // Don't use prepared statements by default
   },
 
   // Development settings
@@ -472,7 +486,7 @@ export const CONNECTION_POOL_CONFIG = {
     max: 10,
     min: 2,
     idle_timeout: 20,
-    max_lifetime: 60 * 10,      // 10 minutes
+    max_lifetime: 60 * 10, // 10 minutes
     connect_timeout: 10,
     prepare: false,
   },
@@ -482,7 +496,7 @@ export const CONNECTION_POOL_CONFIG = {
     max: 5,
     min: 1,
     idle_timeout: 10,
-    max_lifetime: 60 * 5,       // 5 minutes
+    max_lifetime: 60 * 5, // 5 minutes
     connect_timeout: 5,
     prepare: false,
   },
@@ -532,7 +546,7 @@ export class QueryOptimizer {
       FROM casts c
       LEFT JOIN reactions r ON c.hash = r.target_hash
       WHERE c.fid = ${userFid}
-        AND c.timestamp > NOW() - INTERVAL '${sql.raw(days + ' days')}'
+        AND c.timestamp > NOW() - INTERVAL '${sql.raw(days + " days")}'
     `;
   }
 
@@ -555,7 +569,7 @@ export class QueryOptimizer {
       FROM casts c
       INNER JOIN users u ON c.fid = u.fid
       LEFT JOIN reactions r ON c.hash = r.target_hash
-      WHERE c.timestamp > NOW() - INTERVAL '${sql.raw(hours + ' hours')}'
+      WHERE c.timestamp > NOW() - INTERVAL '${sql.raw(hours + " hours")}'
       GROUP BY c.hash, c.fid, c.text, c.timestamp, u.username, u.display_name
       HAVING COUNT(r.hash) > 0
       ORDER BY engagement_score DESC, c.timestamp DESC
@@ -582,7 +596,7 @@ export class DatabaseMonitor {
       WHERE datname = current_database()
       GROUP BY state
     `);
-    
+
     return result as any;
   }
 
@@ -617,7 +631,7 @@ export class DatabaseMonitor {
         ON blocking_activity.pid = blocking_locks.pid
       WHERE NOT blocked_locks.granted
     `);
-    
+
     return result as any;
   }
 
@@ -633,7 +647,7 @@ export class DatabaseMonitor {
       WHERE schemaname = 'public'
       ORDER BY pg_total_relation_size(tablename::regclass) DESC
     `);
-    
+
     return result as any;
   }
 }

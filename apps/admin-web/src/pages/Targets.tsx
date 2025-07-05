@@ -1,21 +1,31 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { 
-  Search, 
-  Plus, 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import {
+  Search,
+  Plus,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
   Crown,
-  User
-} from 'lucide-react';
-import { useTargets, useCreateTarget, useDeleteTarget, useBackfillTarget } from '../hooks/useTargets';
+  User,
+} from "lucide-react";
+import {
+  useTargets,
+  useCreateTarget,
+  useDeleteTarget,
+  useBackfillTarget,
+} from "../hooks/useTargets";
 
 const Targets: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filterUnsynced, setFilterUnsynced] = useState(false);
   const [filterRoot, setFilterRoot] = useState<boolean | null>(null);
   const [page, setPage] = useState(1);
@@ -41,10 +51,10 @@ const Targets: React.FC = () => {
   };
 
   const handleAddTarget = () => {
-    const fid = prompt('Enter FID to add:');
+    const fid = prompt("Enter FID to add:");
     if (!fid) return;
 
-    const isRoot = confirm('Is this a root target?');
+    const isRoot = confirm("Is this a root target?");
     createTargetMutation.mutate({ fid: parseInt(fid), isRoot });
   };
 
@@ -54,7 +64,7 @@ const Targets: React.FC = () => {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return 'Never';
+    if (!dateString) return "Never";
     return new Date(dateString).toLocaleString();
   };
 
@@ -62,7 +72,10 @@ const Targets: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Targets</h1>
-        <Button onClick={handleAddTarget} className="flex items-center space-x-2">
+        <Button
+          onClick={handleAddTarget}
+          className="flex items-center space-x-2"
+        >
           <Plus className="h-4 w-4" />
           <span>Add Target</span>
         </Button>
@@ -105,7 +118,7 @@ const Targets: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setSearchTerm('');
+                  setSearchTerm("");
                   setFilterUnsynced(false);
                   setFilterRoot(null);
                   setPage(1);
@@ -125,7 +138,9 @@ const Targets: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2 text-red-600">
               <XCircle className="h-4 w-4" />
-              <span>{error instanceof Error ? error.message : 'An error occurred'}</span>
+              <span>
+                {error instanceof Error ? error.message : "An error occurred"}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -142,7 +157,9 @@ const Targets: React.FC = () => {
               disabled={loading}
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           </div>
@@ -163,12 +180,15 @@ const Targets: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {targets.map((target) => (
-                <div key={target.fid} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div
+                  key={target.fid}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       {target.pfpUrl ? (
-                        <img 
-                          src={target.pfpUrl} 
+                        <img
+                          src={target.pfpUrl}
                           alt={target.displayName || `FID ${target.fid}`}
                           className="w-10 h-10 rounded-full"
                         />
@@ -204,12 +224,14 @@ const Targets: React.FC = () => {
                       <div className="text-sm text-gray-600">
                         FID: {target.fid}
                         {target.username && ` • @${target.username}`}
-                        {target.followerCount && ` • ${target.followerCount} followers`}
+                        {target.followerCount &&
+                          ` • ${target.followerCount} followers`}
                         {target.castCount && ` • ${target.castCount} casts`}
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         Added: {formatDate(target.addedAt)}
-                        {target.lastSyncedAt && ` • Last synced: ${formatDate(target.lastSyncedAt)}`}
+                        {target.lastSyncedAt &&
+                          ` • Last synced: ${formatDate(target.lastSyncedAt)}`}
                       </div>
                     </div>
                   </div>
@@ -237,7 +259,7 @@ const Targets: React.FC = () => {
               ))}
             </div>
           )}
-          
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center mt-6">

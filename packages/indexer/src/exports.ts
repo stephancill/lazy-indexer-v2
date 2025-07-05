@@ -11,7 +11,7 @@ export {
   resumeQueue,
   clearQueue,
   initializeTargetSets,
-  shutdown
-} from './queue.js';
+  shutdown,
+} from "./queue.js";
 
-export { indexer } from './index.js';
+export { indexer } from "./index.js";

@@ -1,8 +1,8 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { config, isProduction, isDevelopment, isTest } from '../config.js';
-import * as schema from './schema.js';
-import { CONNECTION_POOL_CONFIG } from './optimizations.js';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import { config, isProduction, isDevelopment, isTest } from "../config.js";
+import * as schema from "./schema.js";
+import { CONNECTION_POOL_CONFIG } from "./optimizations.js";
 
 // Get appropriate connection pool configuration based on environment
 function getConnectionConfig() {
@@ -24,11 +24,11 @@ const queryClient = postgres(config.postgres.connectionString, {
     undefined: null, // Convert undefined to null for PostgreSQL compatibility
   },
   connection: {
-    application_name: 'farcaster-indexer',
+    application_name: "farcaster-indexer",
     // Enable connection pooling optimizations
-    'tcp_keepalives_idle': '600',
-    'tcp_keepalives_interval': '30',
-    'tcp_keepalives_count': '3',
+    tcp_keepalives_idle: "600",
+    tcp_keepalives_interval: "30",
+    tcp_keepalives_count: "3",
   },
 });
 
@@ -42,9 +42,9 @@ let testDb: ReturnType<typeof drizzle> | null = null;
 export function getTestDb() {
   if (!testDb) {
     // Use test configuration when in test environment
-    const { getTestConfig, isTest } = require('../config.js');
+    const { getTestConfig, isTest } = require("../config.js");
     const testConfig = isTest() ? getTestConfig() : config;
-    
+
     testClient = postgres(testConfig.postgres.connectionString, {
       max: 5,
       idle_timeout: 10,
@@ -70,7 +70,7 @@ export async function checkDatabaseHealth() {
     const result = await queryClient`SELECT 1 as healthy`;
     return result.length === 1 && result[0].healthy === 1;
   } catch (error) {
-    console.error('Database health check failed:', error);
+    console.error("Database health check failed:", error);
     return false;
   }
 }
@@ -86,7 +86,9 @@ export function getPoolStats() {
 
 // Transaction helper
 export async function withTransaction<T>(
-  callback: (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => Promise<T>
+  callback: (
+    tx: Parameters<Parameters<typeof db.transaction>[0]>[0]
+  ) => Promise<T>
 ): Promise<T> {
   return await db.transaction(callback);
 }
@@ -101,12 +103,12 @@ export async function batchInsert<T extends Record<string, any>>(
   } = {}
 ) {
   const { batchSize = 1000, onConflictDoNothing = false } = options;
-  
+
   const results = [];
-  
+
   for (let i = 0; i < data.length; i += batchSize) {
     const batch = data.slice(i, i + batchSize);
-    
+
     if (onConflictDoNothing) {
       const result = await db.insert(table).values(batch).onConflictDoNothing();
       results.push(result);
@@ -115,7 +117,7 @@ export async function batchInsert<T extends Record<string, any>>(
       results.push(result);
     }
   }
-  
+
   return results;
 }
 
@@ -130,14 +132,17 @@ export async function safeDbOperation<T>(
       return await operation();
     } catch (error) {
       if (i === retries - 1) throw error;
-      
-      console.warn(`Database operation failed, retrying in ${delay}ms...`, error);
-      await new Promise(resolve => setTimeout(resolve, delay));
+
+      console.warn(
+        `Database operation failed, retrying in ${delay}ms...`,
+        error
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
       delay *= 2; // Exponential backoff
     }
   }
-  
-  throw new Error('This should never be reached');
+
+  throw new Error("This should never be reached");
 }
 
 // Query building helpers
@@ -148,69 +153,77 @@ export function buildPaginationQuery(
 ) {
   const safeLimit = Math.min(Math.max(limit, 1), maxLimit);
   const offset = (Math.max(page, 1) - 1) * safeLimit;
-  
+
   return {
     limit: safeLimit,
     offset,
   };
 }
 
-export function buildDateRangeFilter(
-  startDate?: Date,
-  endDate?: Date
-) {
+export function buildDateRangeFilter(startDate?: Date, endDate?: Date) {
   const filters = [];
-  
+
   if (startDate) {
-    filters.push(['>=', startDate]);
+    filters.push([">=", startDate]);
   }
-  
+
   if (endDate) {
-    filters.push(['<=', endDate]);
+    filters.push(["<=", endDate]);
   }
-  
+
   return filters;
 }
 
 // Graceful shutdown
 export async function closeDatabaseConnections() {
-  console.log('Closing database connections...');
-  
+  console.log("Closing database connections...");
+
   try {
     await queryClient.end();
     await closeTestDb();
-    console.log('Database connections closed successfully');
+    console.log("Database connections closed successfully");
   } catch (error) {
-    console.error('Error closing database connections:', error);
+    console.error("Error closing database connections:", error);
     throw error;
   }
 }
 
 // Export schema and types
 export { schema };
-export type { 
-  Target, NewTarget,
-  TargetClient, NewTargetClient,
-  User, NewUser,
-  Cast, NewCast,
-  Reaction, NewReaction,
-  Link, NewLink,
-  Verification, NewVerification,
-  UserData, NewUserData,
-  UsernameProof, NewUsernameProof,
-  OnChainEvent, NewOnChainEvent,
-  SyncState, NewSyncState,
-} from './schema.js';
+export type {
+  Target,
+  NewTarget,
+  TargetClient,
+  NewTargetClient,
+  User,
+  NewUser,
+  Cast,
+  NewCast,
+  Reaction,
+  NewReaction,
+  Link,
+  NewLink,
+  Verification,
+  NewVerification,
+  UserData,
+  NewUserData,
+  UsernameProof,
+  NewUsernameProof,
+  OnChainEvent,
+  NewOnChainEvent,
+  SyncState,
+  NewSyncState,
+} from "./schema.js";
 
 // Process cleanup
-process.on('SIGINT', async () => {
-  console.log('Received SIGINT, closing database connections...');
+process.on("SIGINT", async () => {
+  console.log("Received SIGINT, closing database connections...");
   await closeDatabaseConnections();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  console.log('Received SIGTERM, closing database connections...');
+process.on("SIGTERM", async () => {
+  console.log("Received SIGTERM, closing database connections...");
   await closeDatabaseConnections();
   process.exit(0);
 });

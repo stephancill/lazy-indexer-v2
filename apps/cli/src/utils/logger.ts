@@ -1,5 +1,5 @@
-import chalk from 'chalk';
-import ora, { Ora } from 'ora';
+import chalk from "chalk";
+import ora, { Ora } from "ora";
 
 export class Logger {
   private static instance: Logger;
@@ -15,29 +15,29 @@ export class Logger {
   }
 
   info(message: string, prefix?: string): void {
-    const prefixStr = prefix ? `[${prefix}] ` : '';
-    console.log(chalk.blue('ℹ '), prefixStr + message);
+    const prefixStr = prefix ? `[${prefix}] ` : "";
+    console.log(chalk.blue("ℹ "), prefixStr + message);
   }
 
   success(message: string, prefix?: string): void {
-    const prefixStr = prefix ? `[${prefix}] ` : '';
-    console.log(chalk.green('✅'), prefixStr + message);
+    const prefixStr = prefix ? `[${prefix}] ` : "";
+    console.log(chalk.green("✅"), prefixStr + message);
   }
 
   error(message: string, prefix?: string): void {
-    const prefixStr = prefix ? `[${prefix}] ` : '';
-    console.error(chalk.red('❌'), prefixStr + message);
+    const prefixStr = prefix ? `[${prefix}] ` : "";
+    console.error(chalk.red("❌"), prefixStr + message);
   }
 
   warn(message: string, prefix?: string): void {
-    const prefixStr = prefix ? `[${prefix}] ` : '';
-    console.warn(chalk.yellow('⚠️ '), prefixStr + message);
+    const prefixStr = prefix ? `[${prefix}] ` : "";
+    console.warn(chalk.yellow("⚠️ "), prefixStr + message);
   }
 
   debug(message: string, prefix?: string): void {
     if (process.env.DEBUG) {
-      const prefixStr = prefix ? `[${prefix}] ` : '';
-      console.log(chalk.gray('🔍'), prefixStr + message);
+      const prefixStr = prefix ? `[${prefix}] ` : "";
+      console.log(chalk.gray("🔍"), prefixStr + message);
     }
   }
 
@@ -67,30 +67,30 @@ export class Logger {
 
   table(data: Array<Record<string, any>>): void {
     if (data.length === 0) {
-      console.log(chalk.gray('No data to display'));
+      console.log(chalk.gray("No data to display"));
       return;
     }
 
     const headers = Object.keys(data[0]);
-    const maxLengths = headers.map(header => 
+    const maxLengths = headers.map((header) =>
       Math.max(
         header.length,
-        ...data.map(row => String(row[header] || '').length)
+        ...data.map((row) => String(row[header] || "").length)
       )
     );
 
     // Print header
-    const headerRow = headers.map((header, i) => 
-      header.padEnd(maxLengths[i])
-    ).join(' | ');
+    const headerRow = headers
+      .map((header, i) => header.padEnd(maxLengths[i]))
+      .join(" | ");
     console.log(chalk.cyan(headerRow));
-    console.log(chalk.gray('─'.repeat(headerRow.length)));
+    console.log(chalk.gray("─".repeat(headerRow.length)));
 
     // Print rows
-    data.forEach(row => {
-      const rowString = headers.map((header, i) => 
-        String(row[header] || '').padEnd(maxLengths[i])
-      ).join(' | ');
+    data.forEach((row) => {
+      const rowString = headers
+        .map((header, i) => String(row[header] || "").padEnd(maxLengths[i]))
+        .join(" | ");
       console.log(rowString);
     });
   }
@@ -100,7 +100,7 @@ export class Logger {
   }
 
   line(): void {
-    console.log('');
+    console.log("");
   }
 }
 

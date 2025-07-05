@@ -79,38 +79,27 @@
       "indexes": {
         "casts_fid_idx": {
           "name": "casts_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "casts_timestamp_idx": {
           "name": "casts_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         },
         "casts_parent_hash_idx": {
           "name": "casts_parent_hash_idx",
-          "columns": [
-            "parent_hash"
-          ],
+          "columns": ["parent_hash"],
           "isUnique": false
         },
         "casts_parent_fid_idx": {
           "name": "casts_parent_fid_idx",
-          "columns": [
-            "parent_fid"
-          ],
+          "columns": ["parent_fid"],
           "isUnique": false
         },
         "casts_fid_timestamp_idx": {
           "name": "casts_fid_timestamp_idx",
-          "columns": [
-            "fid",
-            "timestamp"
-          ],
+          "columns": ["fid", "timestamp"],
           "isUnique": false
         }
       },
@@ -214,45 +203,32 @@
       "indexes": {
         "job_status_job_id_idx": {
           "name": "job_status_job_id_idx",
-          "columns": [
-            "job_id"
-          ],
+          "columns": ["job_id"],
           "isUnique": false
         },
         "job_status_status_idx": {
           "name": "job_status_status_idx",
-          "columns": [
-            "status"
-          ],
+          "columns": ["status"],
           "isUnique": false
         },
         "job_status_job_type_idx": {
           "name": "job_status_job_type_idx",
-          "columns": [
-            "job_type"
-          ],
+          "columns": ["job_type"],
           "isUnique": false
         },
         "job_status_fid_idx": {
           "name": "job_status_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "job_status_created_at_idx": {
           "name": "job_status_created_at_idx",
-          "columns": [
-            "created_at"
-          ],
+          "columns": ["created_at"],
           "isUnique": false
         },
         "job_status_status_created_idx": {
           "name": "job_status_status_created_idx",
-          "columns": [
-            "status",
-            "created_at"
-          ],
+          "columns": ["status", "created_at"],
           "isUnique": false
         }
       },
@@ -305,38 +281,27 @@
       "indexes": {
         "links_fid_idx": {
           "name": "links_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "links_target_fid_idx": {
           "name": "links_target_fid_idx",
-          "columns": [
-            "target_fid"
-          ],
+          "columns": ["target_fid"],
           "isUnique": false
         },
         "links_type_idx": {
           "name": "links_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "links_fid_target_idx": {
           "name": "links_fid_target_idx",
-          "columns": [
-            "fid",
-            "target_fid"
-          ],
+          "columns": ["fid", "target_fid"],
           "isUnique": false
         },
         "links_timestamp_idx": {
           "name": "links_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },
@@ -437,45 +402,32 @@
       "indexes": {
         "on_chain_events_type_idx": {
           "name": "on_chain_events_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "on_chain_events_fid_idx": {
           "name": "on_chain_events_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "on_chain_events_block_number_idx": {
           "name": "on_chain_events_block_number_idx",
-          "columns": [
-            "block_number"
-          ],
+          "columns": ["block_number"],
           "isUnique": false
         },
         "on_chain_events_block_timestamp_idx": {
           "name": "on_chain_events_block_timestamp_idx",
-          "columns": [
-            "block_timestamp"
-          ],
+          "columns": ["block_timestamp"],
           "isUnique": false
         },
         "on_chain_events_transaction_hash_idx": {
           "name": "on_chain_events_transaction_hash_idx",
-          "columns": [
-            "transaction_hash"
-          ],
+          "columns": ["transaction_hash"],
           "isUnique": false
         },
         "on_chain_events_chain_id_block_idx": {
           "name": "on_chain_events_chain_id_block_idx",
-          "columns": [
-            "chain_id",
-            "block_number"
-          ],
+          "columns": ["chain_id", "block_number"],
           "isUnique": false
         }
       },
@@ -540,45 +492,32 @@
       "indexes": {
         "reactions_fid_idx": {
           "name": "reactions_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "reactions_type_idx": {
           "name": "reactions_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "reactions_target_hash_idx": {
           "name": "reactions_target_hash_idx",
-          "columns": [
-            "target_hash"
-          ],
+          "columns": ["target_hash"],
           "isUnique": false
         },
         "reactions_target_fid_idx": {
           "name": "reactions_target_fid_idx",
-          "columns": [
-            "target_fid"
-          ],
+          "columns": ["target_fid"],
           "isUnique": false
         },
         "reactions_fid_type_idx": {
           "name": "reactions_fid_type_idx",
-          "columns": [
-            "fid",
-            "type"
-          ],
+          "columns": ["fid", "type"],
           "isUnique": false
         },
         "reactions_timestamp_idx": {
           "name": "reactions_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },
@@ -629,9 +568,7 @@
         "sync_state_name_unique": {
           "name": "sync_state_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       }
     },
@@ -692,16 +629,12 @@
       "indexes": {
         "targets_is_root_idx": {
           "name": "targets_is_root_idx",
-          "columns": [
-            "is_root"
-          ],
+          "columns": ["is_root"],
           "isUnique": false
         },
         "targets_last_synced_idx": {
           "name": "targets_last_synced_idx",
-          "columns": [
-            "last_synced_at"
-          ],
+          "columns": ["last_synced_at"],
           "isUnique": false
         }
       },
@@ -754,31 +687,22 @@
       "indexes": {
         "user_data_fid_idx": {
           "name": "user_data_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "user_data_type_idx": {
           "name": "user_data_type_idx",
-          "columns": [
-            "type"
-          ],
+          "columns": ["type"],
           "isUnique": false
         },
         "user_data_fid_type_idx": {
           "name": "user_data_fid_type_idx",
-          "columns": [
-            "fid",
-            "type"
-          ],
+          "columns": ["fid", "type"],
           "isUnique": false
         },
         "user_data_timestamp_idx": {
           "name": "user_data_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },
@@ -837,30 +761,22 @@
       "indexes": {
         "username_proofs_fid_idx": {
           "name": "username_proofs_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "username_proofs_name_idx": {
           "name": "username_proofs_name_idx",
-          "columns": [
-            "name"
-          ],
+          "columns": ["name"],
           "isUnique": false
         },
         "username_proofs_owner_idx": {
           "name": "username_proofs_owner_idx",
-          "columns": [
-            "owner"
-          ],
+          "columns": ["owner"],
           "isUnique": false
         },
         "username_proofs_timestamp_idx": {
           "name": "username_proofs_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },
@@ -919,16 +835,12 @@
       "indexes": {
         "users_username_idx": {
           "name": "users_username_idx",
-          "columns": [
-            "username"
-          ],
+          "columns": ["username"],
           "isUnique": false
         },
         "users_synced_at_idx": {
           "name": "users_synced_at_idx",
-          "columns": [
-            "synced_at"
-          ],
+          "columns": ["synced_at"],
           "isUnique": false
         }
       },
@@ -988,30 +900,22 @@
       "indexes": {
         "verifications_fid_idx": {
           "name": "verifications_fid_idx",
-          "columns": [
-            "fid"
-          ],
+          "columns": ["fid"],
           "isUnique": false
         },
         "verifications_address_idx": {
           "name": "verifications_address_idx",
-          "columns": [
-            "address"
-          ],
+          "columns": ["address"],
           "isUnique": false
         },
         "verifications_protocol_idx": {
           "name": "verifications_protocol_idx",
-          "columns": [
-            "protocol"
-          ],
+          "columns": ["protocol"],
           "isUnique": false
         },
         "verifications_timestamp_idx": {
           "name": "verifications_timestamp_idx",
-          "columns": [
-            "timestamp"
-          ],
+          "columns": ["timestamp"],
           "isUnique": false
         }
       },

@@ -27,7 +27,7 @@ export interface Job {
   id: string;
   name: string;
   data: any;
-  status: 'active' | 'waiting' | 'completed' | 'failed' | 'delayed';
+  status: "active" | "waiting" | "completed" | "failed" | "delayed";
   progress: number;
   createdAt: string;
   processedAt?: string;
@@ -47,7 +47,7 @@ export interface QueueStats {
 }
 
 export interface SystemHealth {
-  status: 'healthy' | 'degraded' | 'down';
+  status: "healthy" | "degraded" | "down";
   uptime: number;
   lastSync: string;
   services: {
@@ -96,7 +96,7 @@ export interface Cast {
 export interface Reaction {
   hash: string;
   fid: number;
-  type: 'like' | 'recast';
+  type: "like" | "recast";
   targetHash: string;
   timestamp: string;
   author?: {
@@ -111,7 +111,7 @@ export interface Link {
   hash: string;
   fid: number;
   targetFid: number;
-  type: 'follow';
+  type: "follow";
   timestamp: string;
 }
 

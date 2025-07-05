@@ -1,15 +1,20 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
-import Login from './components/Login';
-import Dashboard from './pages/Dashboard';
-import Targets from './pages/Targets';
-import ClientTargets from './pages/ClientTargets';
-import Jobs from './pages/Jobs';
-import Analytics from './pages/Analytics';
+import React from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import Login from "./components/Login";
+import Dashboard from "./pages/Dashboard";
+import Targets from "./pages/Targets";
+import ClientTargets from "./pages/ClientTargets";
+import Jobs from "./pages/Jobs";
+import Analytics from "./pages/Analytics";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -36,10 +41,16 @@ const App: React.FC = () => {
                   <ProtectedRoute>
                     <Layout>
                       <Routes>
-                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        <Route
+                          path="/"
+                          element={<Navigate to="/dashboard" replace />}
+                        />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/targets" element={<Targets />} />
-                        <Route path="/client-targets" element={<ClientTargets />} />
+                        <Route
+                          path="/client-targets"
+                          element={<ClientTargets />}
+                        />
                         <Route path="/jobs" element={<Jobs />} />
                         <Route path="/analytics" element={<Analytics />} />
                       </Routes>

@@ -1,5 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
+import { useQuery } from "@tanstack/react-query";
+import { api } from "../lib/api";
 
 interface AnalyticsData {
   overview: {
@@ -34,9 +34,9 @@ interface AnalyticsData {
   }>;
 }
 
-export const useAnalytics = (timeRange: '7d' | '30d' | '90d' = '30d') => {
+export const useAnalytics = (timeRange: "7d" | "30d" | "90d" = "30d") => {
   return useQuery({
-    queryKey: ['analytics', timeRange],
+    queryKey: ["analytics", timeRange],
     queryFn: async (): Promise<AnalyticsData> => {
       // Note: This would typically call a dedicated analytics endpoint
       // For now, we'll use the health stats endpoint and simulate analytics data

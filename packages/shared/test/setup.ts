@@ -36,6 +36,6 @@ export async function cleanupTestDb() {
       RESTART IDENTITY CASCADE`);
   } catch (error) {
     // Ignore errors during cleanup
-    console.warn('Test cleanup warning:', error);
+    console.warn("Test cleanup warning:", error);
   }
 }

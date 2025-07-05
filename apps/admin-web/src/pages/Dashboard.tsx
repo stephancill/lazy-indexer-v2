@@ -1,28 +1,42 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
-import { 
-  Target, 
-  Users, 
-  Activity, 
-  Database, 
-  CheckCircle, 
-  XCircle, 
+import React from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import {
+  Target,
+  Users,
+  Activity,
+  Database,
+  CheckCircle,
+  XCircle,
   Clock,
-  TrendingUp
-} from 'lucide-react';
-import { useDashboardStats } from '../hooks/useDashboard';
+  TrendingUp,
+} from "lucide-react";
+import { useDashboardStats } from "../hooks/useDashboard";
 
 const Dashboard: React.FC = () => {
-  const { data: stats, isLoading: loading, error, refetch } = useDashboardStats();
+  const {
+    data: stats,
+    isLoading: loading,
+    error,
+    refetch,
+  } = useDashboardStats();
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'healthy': return 'bg-green-100 text-green-800';
-      case 'degraded': return 'bg-yellow-100 text-yellow-800';
-      case 'down': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "healthy":
+        return "bg-green-100 text-green-800";
+      case "degraded":
+        return "bg-yellow-100 text-yellow-800";
+      case "down":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -30,7 +44,7 @@ const Dashboard: React.FC = () => {
     const days = Math.floor(seconds / 86400);
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
-    
+
     if (days > 0) return `${days}d ${hours}h ${minutes}m`;
     if (hours > 0) return `${hours}h ${minutes}m`;
     return `${minutes}m`;
@@ -52,7 +66,11 @@ const Dashboard: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <XCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-600">{error instanceof Error ? error.message : 'Failed to load dashboard'}</p>
+          <p className="text-gray-600">
+            {error instanceof Error
+              ? error.message
+              : "Failed to load dashboard"}
+          </p>
           <Button onClick={() => refetch()} className="mt-4">
             Retry
           </Button>
@@ -65,8 +83,8 @@ const Dashboard: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <Badge className={getStatusColor(stats?.system.status || 'healthy')}>
-          {stats?.system.status || 'Unknown'}
+        <Badge className={getStatusColor(stats?.system.status || "healthy")}>
+          {stats?.system.status || "Unknown"}
         </Badge>
       </div>
 
@@ -78,7 +96,9 @@ const Dashboard: React.FC = () => {
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.targets.total || 0}</div>
+            <div className="text-2xl font-bold">
+              {stats?.targets.total || 0}
+            </div>
             <p className="text-xs text-muted-foreground">
               {stats?.targets.root || 0} root targets
             </p>
@@ -87,14 +107,16 @@ const Dashboard: React.FC = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Client Targets</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Client Targets
+            </CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.clientTargets.total || 0}</div>
-            <p className="text-xs text-muted-foreground">
-              Monitored clients
-            </p>
+            <div className="text-2xl font-bold">
+              {stats?.clientTargets.total || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">Monitored clients</p>
           </CardContent>
         </Card>
 
@@ -117,10 +139,10 @@ const Dashboard: React.FC = () => {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatUptime(stats?.system.uptime || 0)}</div>
-            <p className="text-xs text-muted-foreground">
-              Running smoothly
-            </p>
+            <div className="text-2xl font-bold">
+              {formatUptime(stats?.system.uptime || 0)}
+            </div>
+            <p className="text-xs text-muted-foreground">Running smoothly</p>
           </CardContent>
         </Card>
       </div>
@@ -147,19 +169,26 @@ const Dashboard: React.FC = () => {
                 <span className="text-sm font-medium">Unsynced Targets</span>
                 <div className="flex items-center space-x-2">
                   <XCircle className="h-4 w-4 text-red-500" />
-                  <span className="text-sm">{stats?.targets.unsynced || 0}</span>
+                  <span className="text-sm">
+                    {stats?.targets.unsynced || 0}
+                  </span>
                 </div>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${(stats?.targets.synced || 0) / Math.max(stats?.targets.total || 1, 1) * 100}%` 
+                  style={{
+                    width: `${((stats?.targets.synced || 0) / Math.max(stats?.targets.total || 1, 1)) * 100}%`,
                   }}
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                {Math.round((stats?.targets.synced || 0) / Math.max(stats?.targets.total || 1, 1) * 100)}% synced
+                {Math.round(
+                  ((stats?.targets.synced || 0) /
+                    Math.max(stats?.targets.total || 1, 1)) *
+                    100
+                )}
+                % synced
               </p>
             </div>
           </CardContent>
@@ -196,7 +225,10 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Last sync: {stats?.system.lastSync ? new Date(stats.system.lastSync).toLocaleString() : 'Never'}
+                Last sync:{" "}
+                {stats?.system.lastSync
+                  ? new Date(stats.system.lastSync).toLocaleString()
+                  : "Never"}
               </p>
             </div>
           </CardContent>

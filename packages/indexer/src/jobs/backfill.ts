@@ -1,18 +1,15 @@
-import { db, HubClient, schema } from '@farcaster-indexer/shared';
-import { eq, and } from 'drizzle-orm';
-import type { BackfillJob } from '../queue.js';
-import { 
-  addTargetToSet, 
-  scheduleBackfillJob
-} from '../queue.js';
-import type { 
-  CastMessage, 
-  ReactionMessage, 
-  LinkMessage, 
-  VerificationMessage, 
+import { db, HubClient, schema } from "@farcaster-indexer/shared";
+import { eq, and } from "drizzle-orm";
+import type { BackfillJob } from "../queue.js";
+import { addTargetToSet, scheduleBackfillJob } from "../queue.js";
+import type {
+  CastMessage,
+  ReactionMessage,
+  LinkMessage,
+  VerificationMessage,
   UserDataMessage,
-  OnChainEvent
-} from '@farcaster-indexer/shared';
+  OnChainEvent,
+} from "@farcaster-indexer/shared";
 
 export class BackfillWorker {
   private hubClient: HubClient;
@@ -23,9 +20,9 @@ export class BackfillWorker {
 
   async processJob(job: BackfillJob): Promise<void> {
     const { fid, isRoot } = job.data;
-    
+
     console.log(`Starting backfill for FID ${fid} (isRoot: ${isRoot})`);
-    
+
     try {
       // Fetch all message types for this FID
       await Promise.all([
@@ -44,7 +41,7 @@ export class BackfillWorker {
 
       // Mark target as synced
       await this.markTargetAsSynced(fid);
-      
+
       console.log(`Completed backfill for FID ${fid}`);
     } catch (error) {
       console.error(`Backfill failed for FID ${fid}:`, error);
@@ -55,7 +52,7 @@ export class BackfillWorker {
   private async backfillUserData(fid: number): Promise<void> {
     try {
       const userDataMessages = await this.hubClient.getAllUserDataByFid(fid);
-      
+
       if (userDataMessages.length === 0) {
         console.log(`No user data found for FID ${fid}`);
         return;
@@ -70,18 +67,18 @@ export class BackfillWorker {
       for (const message of userDataMessages) {
         if (message.data?.userDataBody) {
           const { type, value } = message.data.userDataBody;
-          
+
           switch (type) {
-            case 'PFP':
+            case "PFP":
               profile.pfpUrl = value;
               break;
-            case 'DISPLAY':
+            case "DISPLAY":
               profile.displayName = value;
               break;
-            case 'BIO':
+            case "BIO":
               profile.bio = value;
               break;
-            case 'USERNAME':
+            case "USERNAME":
               profile.username = value;
               break;
           }
@@ -89,7 +86,9 @@ export class BackfillWorker {
       }
 
       // Insert or update user profile
-      await db.insert(schema.users).values(profile)
+      await db
+        .insert(schema.users)
+        .values(profile)
         .onConflictDoUpdate({
           target: schema.users.fid,
           set: {
@@ -102,20 +101,24 @@ export class BackfillWorker {
         });
 
       // Store individual user data messages
-      const userDataRecords = userDataMessages.map(message => ({
+      const userDataRecords = userDataMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
-        type: message.data.userDataBody?.type || 'UNKNOWN',
-        value: message.data.userDataBody?.value || '',
+        type: message.data.userDataBody?.type || "UNKNOWN",
+        value: message.data.userDataBody?.value || "",
         timestamp: new Date(message.data.timestamp * 1000),
       }));
 
       if (userDataRecords.length > 0) {
-        await db.insert(schema.userData).values(userDataRecords)
+        await db
+          .insert(schema.userData)
+          .values(userDataRecords)
           .onConflictDoNothing();
       }
 
-      console.log(`Stored ${userDataMessages.length} user data messages for FID ${fid}`);
+      console.log(
+        `Stored ${userDataMessages.length} user data messages for FID ${fid}`
+      );
     } catch (error) {
       console.error(`Failed to backfill user data for FID ${fid}:`, error);
       throw error;
@@ -125,26 +128,27 @@ export class BackfillWorker {
   private async backfillCasts(fid: number): Promise<void> {
     try {
       const castMessages = await this.hubClient.getAllCastsByFid(fid);
-      
+
       if (castMessages.length === 0) {
         console.log(`No casts found for FID ${fid}`);
         return;
       }
 
-      const castRecords = castMessages.map(message => ({
+      const castRecords = castMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
-        text: message.data.castAddBody?.text || '',
+        text: message.data.castAddBody?.text || "",
         parentHash: message.data.castAddBody?.parentCastId?.hash || null,
         parentFid: message.data.castAddBody?.parentCastId?.fid || null,
         parentUrl: message.data.castAddBody?.parentUrl || null,
         timestamp: new Date(message.data.timestamp * 1000),
-        embeds: message.data.castAddBody?.embeds ? JSON.stringify(message.data.castAddBody.embeds) : null,
+        embeds: message.data.castAddBody?.embeds
+          ? JSON.stringify(message.data.castAddBody.embeds)
+          : null,
       }));
 
       if (castRecords.length > 0) {
-        await db.insert(schema.casts).values(castRecords)
-          .onConflictDoNothing();
+        await db.insert(schema.casts).values(castRecords).onConflictDoNothing();
       }
 
       console.log(`Stored ${castMessages.length} casts for FID ${fid}`);
@@ -157,22 +161,27 @@ export class BackfillWorker {
   private async backfillReactions(fid: number): Promise<void> {
     try {
       const reactionMessages = await this.hubClient.getAllReactionsByFid(fid);
-      
+
       if (reactionMessages.length === 0) {
         console.log(`No reactions found for FID ${fid}`);
         return;
       }
 
-      const reactionRecords = reactionMessages.map(message => ({
+      const reactionRecords = reactionMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
-        type: message.data.reactionBody?.type === 'LIKE' ? 'like' as const : 'recast' as const,
-        targetHash: message.data.reactionBody?.targetCastId?.hash || '',
+        type:
+          message.data.reactionBody?.type === "LIKE"
+            ? ("like" as const)
+            : ("recast" as const),
+        targetHash: message.data.reactionBody?.targetCastId?.hash || "",
         timestamp: new Date(message.data.timestamp * 1000),
       }));
 
       if (reactionRecords.length > 0) {
-        await db.insert(schema.reactions).values(reactionRecords)
+        await db
+          .insert(schema.reactions)
+          .values(reactionRecords)
           .onConflictDoNothing();
       }
 
@@ -186,23 +195,22 @@ export class BackfillWorker {
   private async backfillLinks(fid: number): Promise<void> {
     try {
       const linkMessages = await this.hubClient.getAllLinksByFid(fid);
-      
+
       if (linkMessages.length === 0) {
         console.log(`No links found for FID ${fid}`);
         return;
       }
 
-      const linkRecords = linkMessages.map(message => ({
+      const linkRecords = linkMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
         targetFid: message.data.linkBody?.targetFid || 0,
-        type: 'follow' as const,
+        type: "follow" as const,
         timestamp: new Date(message.data.timestamp * 1000),
       }));
 
       if (linkRecords.length > 0) {
-        await db.insert(schema.links).values(linkRecords)
-          .onConflictDoNothing();
+        await db.insert(schema.links).values(linkRecords).onConflictDoNothing();
       }
 
       console.log(`Stored ${linkMessages.length} links for FID ${fid}`);
@@ -214,27 +222,32 @@ export class BackfillWorker {
 
   private async backfillVerifications(fid: number): Promise<void> {
     try {
-      const verificationMessages = await this.hubClient.getAllVerificationsByFid(fid);
-      
+      const verificationMessages =
+        await this.hubClient.getAllVerificationsByFid(fid);
+
       if (verificationMessages.length === 0) {
         console.log(`No verifications found for FID ${fid}`);
         return;
       }
 
-      const verificationRecords = verificationMessages.map(message => ({
+      const verificationRecords = verificationMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
-        address: message.data.verificationAddEthAddressBody?.address || '',
-        protocol: 'ethereum' as const,
+        address: message.data.verificationAddEthAddressBody?.address || "",
+        protocol: "ethereum" as const,
         timestamp: new Date(message.data.timestamp * 1000),
       }));
 
       if (verificationRecords.length > 0) {
-        await db.insert(schema.verifications).values(verificationRecords)
+        await db
+          .insert(schema.verifications)
+          .values(verificationRecords)
           .onConflictDoNothing();
       }
 
-      console.log(`Stored ${verificationMessages.length} verifications for FID ${fid}`);
+      console.log(
+        `Stored ${verificationMessages.length} verifications for FID ${fid}`
+      );
     } catch (error) {
       console.error(`Failed to backfill verifications for FID ${fid}:`, error);
       throw error;
@@ -243,14 +256,15 @@ export class BackfillWorker {
 
   private async backfillOnChainEvents(fid: number): Promise<void> {
     try {
-      const onChainEventMessages = await this.hubClient.getAllOnChainSignersByFid(fid);
-      
+      const onChainEventMessages =
+        await this.hubClient.getAllOnChainSignersByFid(fid);
+
       if (onChainEventMessages.length === 0) {
         console.log(`No on-chain events found for FID ${fid}`);
         return;
       }
 
-      const eventRecords = onChainEventMessages.map(event => ({
+      const eventRecords = onChainEventMessages.map((event) => ({
         type: event.type,
         chainId: event.chainId,
         blockNumber: event.blockNumber,
@@ -259,18 +273,29 @@ export class BackfillWorker {
         transactionHash: event.transactionHash,
         logIndex: event.logIndex,
         fid: event.fid,
-        signerEventBody: event.signerEventBody ? JSON.stringify(event.signerEventBody) : null,
-        idRegistryEventBody: event.idRegisterEventBody ? JSON.stringify(event.idRegisterEventBody) : null,
+        signerEventBody: event.signerEventBody
+          ? JSON.stringify(event.signerEventBody)
+          : null,
+        idRegistryEventBody: event.idRegisterEventBody
+          ? JSON.stringify(event.idRegisterEventBody)
+          : null,
       }));
 
       if (eventRecords.length > 0) {
-        await db.insert(schema.onChainEvents).values(eventRecords)
+        await db
+          .insert(schema.onChainEvents)
+          .values(eventRecords)
           .onConflictDoNothing();
       }
 
-      console.log(`Stored ${onChainEventMessages.length} on-chain events for FID ${fid}`);
+      console.log(
+        `Stored ${onChainEventMessages.length} on-chain events for FID ${fid}`
+      );
     } catch (error) {
-      console.error(`Failed to backfill on-chain events for FID ${fid}:`, error);
+      console.error(
+        `Failed to backfill on-chain events for FID ${fid}:`,
+        error
+      );
       throw error;
     }
   }
@@ -278,23 +303,24 @@ export class BackfillWorker {
   private async expandGraphFromRootTarget(fid: number): Promise<void> {
     try {
       console.log(`Expanding graph from root target FID ${fid}`);
-      
-      // Get all users this root target follows
-      const followLinks = await db.select()
-        .from(schema.links)
-        .where(and(
-          eq(schema.links.fid, fid),
-          eq(schema.links.type, 'follow')
-        ));
 
-      console.log(`Found ${followLinks.length} follows for root target FID ${fid}`);
+      // Get all users this root target follows
+      const followLinks = await db
+        .select()
+        .from(schema.links)
+        .where(and(eq(schema.links.fid, fid), eq(schema.links.type, "follow")));
+
+      console.log(
+        `Found ${followLinks.length} follows for root target FID ${fid}`
+      );
 
       // Add each followed user as a target (if not already exists)
       for (const link of followLinks) {
         const targetFid = link.targetFid;
-        
+
         // Check if target already exists
-        const existingTarget = await db.select()
+        const existingTarget = await db
+          .select()
           .from(schema.targets)
           .where(eq(schema.targets.fid, targetFid))
           .limit(1);
@@ -313,24 +339,30 @@ export class BackfillWorker {
 
           // Schedule backfill job for this new target
           await scheduleBackfillJob(targetFid, false);
-          
-          console.log(`Added new target FID ${targetFid} and scheduled backfill`);
+
+          console.log(
+            `Added new target FID ${targetFid} and scheduled backfill`
+          );
         }
       }
 
       console.log(`Graph expansion completed for root target FID ${fid}`);
     } catch (error) {
-      console.error(`Failed to expand graph for root target FID ${fid}:`, error);
+      console.error(
+        `Failed to expand graph for root target FID ${fid}:`,
+        error
+      );
       throw error;
     }
   }
 
   private async markTargetAsSynced(fid: number): Promise<void> {
     try {
-      await db.update(schema.targets)
+      await db
+        .update(schema.targets)
         .set({ lastSyncedAt: new Date() })
         .where(eq(schema.targets.fid, fid));
-      
+
       console.log(`Marked FID ${fid} as synced`);
     } catch (error) {
       console.error(`Failed to mark FID ${fid} as synced:`, error);
@@ -342,7 +374,7 @@ export class BackfillWorker {
 // Factory function to create worker processor
 export function createBackfillProcessor(hubClient: HubClient) {
   const worker = new BackfillWorker(hubClient);
-  
+
   return async (job: BackfillJob) => {
     await worker.processJob(job);
   };

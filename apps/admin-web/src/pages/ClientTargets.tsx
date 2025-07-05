@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
-import { Button } from '../components/ui/button';
-import { Plus, RefreshCw, XCircle, Users, User } from 'lucide-react';
-import { useClientTargets, useCreateClientTarget, useDeleteClientTarget } from '../hooks/useClientTargets';
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Input } from "../components/ui/input";
+import { Button } from "../components/ui/button";
+import { Plus, RefreshCw, XCircle, Users, User } from "lucide-react";
+import {
+  useClientTargets,
+  useCreateClientTarget,
+  useDeleteClientTarget,
+} from "../hooks/useClientTargets";
 
 const ClientTargets: React.FC = () => {
-  const [newFid, setNewFid] = useState('');
-  
+  const [newFid, setNewFid] = useState("");
+
   const { data, isLoading: loading, error, refetch } = useClientTargets();
   const createClientTargetMutation = useCreateClientTarget();
   const deleteClientTargetMutation = useDeleteClientTarget();
@@ -18,7 +27,7 @@ const ClientTargets: React.FC = () => {
 
   const handleAddClientTarget = () => {
     if (!newFid.trim()) return;
-    
+
     const fid = parseInt(newFid.trim());
     if (isNaN(fid) || fid <= 0) {
       return;
@@ -26,13 +35,14 @@ const ClientTargets: React.FC = () => {
 
     createClientTargetMutation.mutate(fid, {
       onSuccess: () => {
-        setNewFid('');
+        setNewFid("");
       },
     });
   };
 
   const handleRemoveClientTarget = (fid: number) => {
-    if (!confirm(`Are you sure you want to remove client target ${fid}?`)) return;
+    if (!confirm(`Are you sure you want to remove client target ${fid}?`))
+      return;
     deleteClientTargetMutation.mutate(fid);
   };
 
@@ -46,7 +56,8 @@ const ClientTargets: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Client Targets</h1>
           <p className="text-gray-600 mt-1">
-            Monitor client apps to automatically discover new root targets when users sign up
+            Monitor client apps to automatically discover new root targets when
+            users sign up
           </p>
         </div>
       </div>
@@ -54,7 +65,9 @@ const ClientTargets: React.FC = () => {
       {/* Add Client Target */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-sm font-medium">Add Client Target</CardTitle>
+          <CardTitle className="text-sm font-medium">
+            Add Client Target
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
@@ -63,7 +76,7 @@ const ClientTargets: React.FC = () => {
                 placeholder="Enter client FID to monitor..."
                 value={newFid}
                 onChange={(e) => setNewFid(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAddClientTarget()}
+                onKeyPress={(e) => e.key === "Enter" && handleAddClientTarget()}
                 disabled={adding}
               />
             </div>
@@ -73,11 +86,12 @@ const ClientTargets: React.FC = () => {
               className="flex items-center space-x-2"
             >
               <Plus className="h-4 w-4" />
-              <span>{adding ? 'Adding...' : 'Add Client'}</span>
+              <span>{adding ? "Adding..." : "Add Client"}</span>
             </Button>
           </div>
           <p className="text-sm text-gray-500 mt-2">
-            When users sign up through this client app, they'll automatically be added as root targets
+            When users sign up through this client app, they'll automatically be
+            added as root targets
           </p>
         </CardContent>
       </Card>
@@ -88,7 +102,9 @@ const ClientTargets: React.FC = () => {
           <CardContent className="pt-6">
             <div className="flex items-center space-x-2 text-red-600">
               <XCircle className="h-4 w-4" />
-              <span>{error instanceof Error ? error.message : 'An error occurred'}</span>
+              <span>
+                {error instanceof Error ? error.message : "An error occurred"}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -110,7 +126,9 @@ const ClientTargets: React.FC = () => {
               disabled={loading}
               size="sm"
             >
-              <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </Button>
           </div>
@@ -134,12 +152,15 @@ const ClientTargets: React.FC = () => {
           ) : (
             <div className="space-y-4">
               {clientTargets.map((client) => (
-                <div key={client.clientFid} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                <div
+                  key={client.clientFid}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                >
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       {client.pfpUrl ? (
-                        <img 
-                          src={client.pfpUrl} 
+                        <img
+                          src={client.pfpUrl}
                           alt={client.displayName || `FID ${client.clientFid}`}
                           className="w-10 h-10 rounded-full"
                         />
@@ -157,11 +178,12 @@ const ClientTargets: React.FC = () => {
                         <Badge className="bg-blue-100 text-blue-800">
                           Client
                         </Badge>
-                        {client.discoveredTargets && client.discoveredTargets > 0 && (
-                          <Badge className="bg-green-100 text-green-800">
-                            {client.discoveredTargets} discovered
-                          </Badge>
-                        )}
+                        {client.discoveredTargets &&
+                          client.discoveredTargets > 0 && (
+                            <Badge className="bg-green-100 text-green-800">
+                              {client.discoveredTargets} discovered
+                            </Badge>
+                          )}
                       </div>
                       <div className="text-sm text-gray-600">
                         FID: {client.clientFid}
@@ -192,14 +214,28 @@ const ClientTargets: React.FC = () => {
       {/* Information Card */}
       <Card className="bg-blue-50 border-blue-200">
         <CardHeader>
-          <CardTitle className="text-sm text-blue-900">How Client Target Discovery Works</CardTitle>
+          <CardTitle className="text-sm text-blue-900">
+            How Client Target Discovery Works
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-sm text-blue-800 space-y-2">
-            <p>• Client targets are FIDs representing applications or services that users interact with</p>
-            <p>• When a user signs up through a monitored client app, they're automatically added as a root target</p>
-            <p>• This enables automatic discovery of new users without manual intervention</p>
-            <p>• The system monitors ON_CHAIN_EVENT (SIGNER) events to detect new user signups</p>
+            <p>
+              • Client targets are FIDs representing applications or services
+              that users interact with
+            </p>
+            <p>
+              • When a user signs up through a monitored client app, they're
+              automatically added as a root target
+            </p>
+            <p>
+              • This enables automatic discovery of new users without manual
+              intervention
+            </p>
+            <p>
+              • The system monitors ON_CHAIN_EVENT (SIGNER) events to detect new
+              user signups
+            </p>
           </div>
         </CardContent>
       </Card>
