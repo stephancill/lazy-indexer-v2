@@ -112,7 +112,7 @@ export class HubClient {
           `Retrying request (attempt ${retryCount + 1}/${MAX_RETRIES})`
         );
 
-        const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount);
+        const delay = RETRY_DELAY_BASE * 2 ** retryCount;
         await new Promise((resolve) => setTimeout(resolve, delay));
 
         // Reset to first hub for retry
@@ -179,7 +179,7 @@ export class HubClient {
         healthy: true,
         version: info.version,
       };
-    } catch (error) {
+    } catch (_error) {
       return {
         healthy: false,
         version: "unknown",

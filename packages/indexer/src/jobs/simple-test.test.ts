@@ -138,7 +138,6 @@ describe("Configuration and Types", () => {
 
 describe("Integration Test", () => {
   it("should be able to create a complete worker setup", async () => {
-    const { HubClient } = await import("@farcaster-indexer/shared");
     const {
       createBackfillWorker,
       createRealtimeWorker,

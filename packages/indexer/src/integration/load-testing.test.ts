@@ -31,13 +31,13 @@ vi.mock("bullmq", () => ({
   })),
 }));
 
-const { targets, casts, users, links, reactions } = schema;
+const { targets, casts, users, links } = schema;
 
 describe("Load Testing", () => {
   let processorQueue: Queue;
   let backfillQueue: Queue;
   let processorWorker: ProcessorWorker;
-  let backfillWorker: BackfillWorker;
+  let _backfillWorker: BackfillWorker;
 
   beforeAll(async () => {
     await setupTestDb();
@@ -66,7 +66,7 @@ describe("Load Testing", () => {
 
     const hubClient = new HubClient(config.hubs);
     processorWorker = new ProcessorWorker();
-    backfillWorker = new BackfillWorker(hubClient);
+    _backfillWorker = new BackfillWorker(hubClient);
   });
 
   afterAll(async () => {
@@ -132,7 +132,9 @@ describe("Load Testing", () => {
       // Verify events per second
       const eventsPerSecond = numEvents / (processingTime / 1000);
       console.log(
-        `Processed ${numEvents} events in ${processingTime}ms (${eventsPerSecond.toFixed(2)} events/second)`
+        `Processed ${numEvents} events in ${processingTime}ms (${eventsPerSecond.toFixed(
+          2
+        )} events/second)`
       );
 
       // Should handle at least 50 events per second
@@ -203,7 +205,9 @@ describe("Load Testing", () => {
 
       const eventsPerSecond = numEvents / (processingTime / 1000);
       console.log(
-        `Processed ${numEvents} reactions in ${processingTime}ms (${eventsPerSecond.toFixed(2)} reactions/second)`
+        `Processed ${numEvents} reactions in ${processingTime}ms (${eventsPerSecond.toFixed(
+          2
+        )} reactions/second)`
       );
 
       // Should handle at least 40 reactions per second
@@ -258,7 +262,9 @@ describe("Load Testing", () => {
 
       const eventsPerSecond = numEvents / (processingTime / 1000);
       console.log(
-        `Processed ${numEvents} follows in ${processingTime}ms (${eventsPerSecond.toFixed(2)} follows/second)`
+        `Processed ${numEvents} follows in ${processingTime}ms (${eventsPerSecond.toFixed(
+          2
+        )} follows/second)`
       );
 
       // Should handle at least 25 follows per second
@@ -293,7 +299,9 @@ describe("Load Testing", () => {
 
       const insertsPerSecond = numTargets / (insertTime / 1000);
       console.log(
-        `Inserted ${numTargets} targets in ${insertTime}ms (${insertsPerSecond.toFixed(2)} inserts/second)`
+        `Inserted ${numTargets} targets in ${insertTime}ms (${insertsPerSecond.toFixed(
+          2
+        )} inserts/second)`
       );
 
       // Should handle at least 200 inserts per second
@@ -512,7 +520,9 @@ describe("Load Testing", () => {
 
       const eventsPerSecond = totalEvents / (processingTime / 1000);
       console.log(
-        `${numWorkers} workers processed ${totalEvents} events in ${processingTime}ms (${eventsPerSecond.toFixed(2)} events/second)`
+        `${numWorkers} workers processed ${totalEvents} events in ${processingTime}ms (${eventsPerSecond.toFixed(
+          2
+        )} events/second)`
       );
 
       // Concurrent processing should be faster than sequential

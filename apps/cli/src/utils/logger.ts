@@ -65,7 +65,7 @@ export class Logger {
     }
   }
 
-  table(data: Array<Record<string, any>>): void {
+  table(data: Array<Record<string, unknown>>): void {
     if (data.length === 0) {
       console.log(chalk.gray("No data to display"));
       return;
@@ -87,15 +87,15 @@ export class Logger {
     console.log(chalk.gray("─".repeat(headerRow.length)));
 
     // Print rows
-    data.forEach((row) => {
+    for (const row of data) {
       const rowString = headers
         .map((header, i) => String(row[header] || "").padEnd(maxLengths[i]))
         .join(" | ");
       console.log(rowString);
-    });
+    }
   }
 
-  json(data: any): void {
+  json(data: unknown): void {
     console.log(JSON.stringify(data, null, 2));
   }
 

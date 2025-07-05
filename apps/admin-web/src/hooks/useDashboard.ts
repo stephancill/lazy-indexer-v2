@@ -11,21 +11,37 @@ export const useDashboardStats = () => {
         api.admin.jobs.list(),
       ]);
 
-      const health = healthData as any;
-      const jobs = jobsData as any;
+      const health = healthData as {
+        stats?: {
+          targets?: { total?: string; root?: string; clients?: string };
+        };
+      };
+      const jobs = jobsData as {
+        jobs?: Record<
+          string,
+          {
+            active?: number;
+            waiting?: number;
+            completed?: number;
+            failed?: number;
+          }
+        >;
+      };
 
       // Parse the response structure
       const statsData = health.stats || {};
       const queuesData = jobs.jobs || {};
 
       // Calculate total job stats
-      const totalJobs = Object.values(queuesData as Record<string, any>).reduce(
-        (acc, queue: any) => ({
-          active: acc.active + (queue.active || 0),
-          waiting: acc.waiting + (queue.waiting || 0),
-          completed: acc.completed + (queue.completed || 0),
-          failed: acc.failed + (queue.failed || 0),
-        }),
+      const totalJobs = Object.values(queuesData).reduce(
+        (acc, queue) => {
+          return {
+            active: acc.active + (queue.active || 0),
+            waiting: acc.waiting + (queue.waiting || 0),
+            completed: acc.completed + (queue.completed || 0),
+            failed: acc.failed + (queue.failed || 0),
+          };
+        },
         { active: 0, waiting: 0, completed: 0, failed: 0 }
       );
 
@@ -41,7 +57,12 @@ export const useDashboardStats = () => {
         clientTargets: {
           total: Number.parseInt(statsData.targets?.clients || "0"),
         },
-        jobs: totalJobs,
+        jobs: {
+          active: totalJobs.active,
+          waiting: totalJobs.waiting,
+          completed: totalJobs.completed,
+          failed: totalJobs.failed,
+        },
         system: {
           status: "healthy" as const,
           uptime: 0,

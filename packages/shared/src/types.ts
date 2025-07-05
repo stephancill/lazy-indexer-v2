@@ -223,7 +223,7 @@ export interface HubResponse<T> {
 }
 
 export interface JobData {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface BackfillJobData extends JobData {
@@ -239,7 +239,7 @@ export interface ProcessEventJobData extends JobData {
   event: FarcasterEvent;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

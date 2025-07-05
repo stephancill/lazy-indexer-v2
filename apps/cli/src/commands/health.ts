@@ -69,7 +69,7 @@ export const healthCommand = new Command("health")
 
           // Hub client health check
           try {
-            const hubClient = new HubClient(config.hubs);
+            const _hubClient = new HubClient(config.hubs);
             // Note: Hub client getInfo method needs to be implemented
             healthStatus.hubClient = true;
             details.push({
@@ -191,7 +191,7 @@ export const healthCommand = new Command("health")
           try {
             await db.execute(sql`SELECT COUNT(*) FROM __drizzle_migrations`);
             migrationsExist = true;
-          } catch (error) {
+          } catch (_error) {
             // Migrations table doesn't exist
           }
 
@@ -228,7 +228,7 @@ export const healthCommand = new Command("health")
               sql`SELECT COUNT(*) as count FROM links`
             );
             stats.push({ table: "links", count: linksCount[0]?.count || 0 });
-          } catch (error) {
+          } catch (_error) {
             // Tables might not exist yet
           }
 
@@ -272,7 +272,7 @@ export const healthCommand = new Command("health")
           });
 
           // Basic ping test
-          const pingResult = await redisClient.ping();
+          const _pingResult = await redisClient.ping();
 
           // Get Redis info
           const info = await redisClient.info();
@@ -303,7 +303,7 @@ export const healthCommand = new Command("health")
           logger.info(
             `Uptime: ${
               uptime
-                ? Math.floor(Number.parseInt(uptime) / 86400) + " days"
+                ? `${Math.floor(Number.parseInt(uptime) / 86400)} days`
                 : "Unknown"
             }`
           );
@@ -331,13 +331,13 @@ export const healthCommand = new Command("health")
         try {
           logger.startSpinner("Checking Farcaster hub health...");
 
-          const hubClient = new HubClient(config.hubs);
+          const _hubClient = new HubClient(config.hubs);
           const results = [];
 
           // Test each hub individually
-          for (const [index, hub] of config.hubs.entries()) {
+          for (const [_index, hub] of config.hubs.entries()) {
             try {
-              const tempClient = new HubClient([hub]);
+              const _tempClient = new HubClient([hub]);
               // Note: Hub client getInfo method needs to be implemented
               results.push({
                 hub: hub.url,

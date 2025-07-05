@@ -6,7 +6,7 @@ import { config } from "../config.js";
 export async function runMigrations() {
   console.log("Starting database migrations...");
 
-  const { execSync } = await import("child_process");
+  const { execSync } = await import("node:child_process");
   const path = await import("node:path");
 
   try {
@@ -30,7 +30,7 @@ export async function runMigrations() {
     console.log(`Running migrations from project root: ${projectRoot}`);
 
     // Use drizzle-kit up:pg command to run migrations
-    const migrateCommand = `npx drizzle-kit up:pg`;
+    const migrateCommand = "npx drizzle-kit up:pg";
     console.log(`Executing: ${migrateCommand}`);
 
     execSync(migrateCommand, {
@@ -50,20 +50,20 @@ export async function runMigrations() {
 }
 
 export async function createMigration(name: string) {
-  const { execSync } = await import("child_process");
+  const { execSync } = await import("node:child_process");
 
   try {
     console.log(`Creating migration: ${name}`);
 
     // Generate migration using drizzle-kit
     execSync(
-      `npx drizzle-kit generate:pg --out drizzle --schema packages/shared/src/db/schema.ts`,
+      "npx drizzle-kit generate:pg --out drizzle --schema packages/shared/src/db/schema.ts",
       {
         stdio: "inherit",
       }
     );
 
-    console.log(`Migration created successfully!`);
+    console.log("Migration created successfully!");
   } catch (error) {
     console.error("Failed to create migration:", error);
     throw error;
@@ -170,10 +170,9 @@ export async function checkDatabaseConnection() {
     if (result.length === 1 && result[0].test === 1) {
       console.log("Database connection successful!");
       return true;
-    } else {
+    }
       console.error("Database connection test failed: unexpected result");
       return false;
-    }
   } catch (error) {
     console.error("Database connection failed:", error);
     return false;

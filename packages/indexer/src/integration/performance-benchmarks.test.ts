@@ -24,16 +24,16 @@ import { ProcessorWorker } from "../jobs/processor.js";
 import { config, HubClient, schema } from "@farcaster-indexer/shared";
 import type { FarcasterEvent } from "@farcaster-indexer/shared";
 
-const { casts, users, targets, reactions, links } = schema;
+const { casts, users, targets } = schema;
 
 describe("Performance Benchmarks", () => {
-  let hubClient: HubClient;
+  let _hubClient: HubClient;
   let processorWorker: ProcessorWorker;
   let monitor: SystemMonitor;
 
   beforeAll(async () => {
     await setupTestDb();
-    hubClient = new HubClient(config.hubs);
+    _hubClient = new HubClient(config.hubs);
     processorWorker = new ProcessorWorker();
     monitor = new SystemMonitor();
 
@@ -198,11 +198,11 @@ describe("Performance Benchmarks", () => {
       expect(benchmarkResults.results).toHaveLength(10);
 
       // All concurrent operations should complete within reasonable time
-      benchmarkResults.results.forEach((result) => {
+      for (const result of benchmarkResults.results) {
         expect(result.duration).toBeLessThan(
           PERFORMANCE_THRESHOLDS.DATABASE_INSERT_MAX * 2
         );
-      });
+      }
     });
   });
 
@@ -298,7 +298,7 @@ describe("Performance Benchmarks", () => {
       );
 
       // Batch processing should be efficient per event
-      const averageTimePerEvent = batchJob!.duration / batchSize;
+      const averageTimePerEvent = batchJob?.duration / batchSize;
       expect(averageTimePerEvent).toBeLessThan(
         PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX
       );
@@ -398,11 +398,11 @@ describe("Performance Benchmarks", () => {
       expect(benchmarkResults.results).toHaveLength(3);
 
       // All event types should process efficiently
-      benchmarkResults.results.forEach((result) => {
+      for (const result of benchmarkResults.results) {
         expect(result.duration).toBeLessThan(
           PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX
         );
-      });
+      }
     });
   });
 
@@ -450,7 +450,9 @@ describe("Performance Benchmarks", () => {
       const memoryGrowth = (finalMemory - initialMemory) / (1024 * 1024); // MB
 
       console.log(
-        `Memory growth after processing ${numEvents} events: ${memoryGrowth.toFixed(2)}MB`
+        `Memory growth after processing ${numEvents} events: ${memoryGrowth.toFixed(
+          2
+        )}MB`
       );
 
       // Memory growth should be reasonable

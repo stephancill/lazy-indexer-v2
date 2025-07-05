@@ -272,8 +272,16 @@ describe("Edge Cases and Security", () => {
     });
 
     it("should handle functions", () => {
-      expect(validateFid(() => {})).toBe(null);
-      expect(validateQueueName(() => {})).toBe(null);
+      expect(
+        validateFid(() => {
+          /* empty function */
+        })
+      ).toBe(null);
+      expect(
+        validateQueueName(() => {
+          /* empty function */
+        })
+      ).toBe(null);
     });
   });
 
@@ -290,7 +298,7 @@ describe("Edge Cases and Security", () => {
     it("should handle large invalid inputs efficiently", () => {
       const start = performance.now();
       for (let i = 0; i < 1000; i++) {
-        validateFid("invalid" + i);
+        validateFid(`invalid${i}`);
       }
       const end = performance.now();
       expect(end - start).toBeLessThan(100); // Should complete in under 100ms

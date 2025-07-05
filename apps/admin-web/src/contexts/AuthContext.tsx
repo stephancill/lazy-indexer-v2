@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = (await api.auth.status()) as { authenticated: boolean };
       setIsAuthenticated(response.authenticated);
-    } catch (error) {
+    } catch (_error) {
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
@@ -53,10 +53,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success) {
         setIsAuthenticated(true);
         return { success: true };
-      } else {
-        return { success: false, error: response.error || "Login failed" };
       }
-    } catch (error) {
+        return { success: false, error: response.error || "Login failed" };
+    } catch (_error) {
       return { success: false, error: "Login failed. Please try again." };
     }
   };

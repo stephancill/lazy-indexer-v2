@@ -352,9 +352,9 @@ export class DatabaseOptimizer {
       try {
         console.log(`Running: ${task.substring(0, 50)}...`);
         await this.db.execute(sql.raw(task));
-        console.log(`✅ Completed maintenance task`);
+        console.log("✅ Completed maintenance task");
       } catch (error) {
-        console.warn(`⚠️ Maintenance task failed:`, error);
+        console.warn("⚠️ Maintenance task failed:", error);
       }
     }
   }
@@ -371,7 +371,9 @@ export class DatabaseOptimizer {
       // Cache hit ratio recommendations
       if (metrics.cacheHitRatio < 95) {
         recommendations.push(
-          `Cache hit ratio is ${metrics.cacheHitRatio.toFixed(1)}%. Consider increasing shared_buffers.`
+          `Cache hit ratio is ${metrics.cacheHitRatio.toFixed(
+            1
+          )}%. Consider increasing shared_buffers.`
         );
       }
 
@@ -391,7 +393,9 @@ export class DatabaseOptimizer {
       );
       if (tablesWithDeadTuples.length > 0) {
         recommendations.push(
-          `Tables with high dead tuple ratio: ${tablesWithDeadTuples.map((t) => t.tablename).join(", ")}. Consider VACUUM.`
+          `Tables with high dead tuple ratio: ${tablesWithDeadTuples
+            .map((t) => t.tablename)
+            .join(", ")}. Consider VACUUM.`
         );
       }
 
@@ -404,7 +408,9 @@ export class DatabaseOptimizer {
       );
       if (staleAnalyze.length > 0) {
         recommendations.push(
-          `Tables with stale statistics: ${staleAnalyze.map((t) => t.tablename).join(", ")}. Run ANALYZE.`
+          `Tables with stale statistics: ${staleAnalyze
+            .map((t) => t.tablename)
+            .join(", ")}. Run ANALYZE.`
         );
       }
     } catch (error) {
@@ -425,35 +431,39 @@ export class DatabaseOptimizer {
     const recommendations = await this.generateRecommendations();
 
     let report = "\n🗄️ Database Optimization Report\n";
-    report += "=".repeat(50) + "\n";
+    report += `${"=".repeat(50)}\n`;
     report += `Generated: ${new Date().toISOString()}\n\n`;
 
     // Performance Overview
     report += "📊 Performance Overview:\n";
-    report += "-".repeat(30) + "\n";
+    report += `${"-".repeat(30)}\n`;
     report += `Cache Hit Ratio: ${metrics.cacheHitRatio.toFixed(1)}%\n`;
     report += `Tables Analyzed: ${metrics.tableStats.length}\n`;
     report += `Indexes Monitored: ${metrics.indexUsage.length}\n\n`;
 
     // Top Tables by Size
     report += "📈 Top Tables by Live Tuples:\n";
-    report += "-".repeat(30) + "\n";
-    metrics.tableStats.slice(0, 5).forEach((table) => {
-      report += `${table.tablename}: ${table.live_tuples?.toLocaleString() || 0} rows\n`;
-    });
+    report += `${"-".repeat(30)}\n`;
+    for (const table of metrics.tableStats.slice(0, 5)) {
+      report += `${table.tablename}: ${
+        table.live_tuples?.toLocaleString() || 0
+      } rows\n`;
+    }
     report += "\n";
 
     // Top Indexes by Usage
     report += "🔍 Top Indexes by Scans:\n";
-    report += "-".repeat(30) + "\n";
-    metrics.indexUsage.slice(0, 5).forEach((index) => {
-      report += `${index.indexname}: ${index.idx_scan?.toLocaleString() || 0} scans\n`;
-    });
+    report += `${"-".repeat(30)}\n`;
+    for (const index of metrics.indexUsage.slice(0, 5)) {
+      report += `${index.indexname}: ${
+        index.idx_scan?.toLocaleString() || 0
+      } scans\n`;
+    }
     report += "\n";
 
     // Recommendations
     report += "💡 Optimization Recommendations:\n";
-    report += "-".repeat(30) + "\n";
+    report += `${"-".repeat(30)}\n`;
     if (recommendations.length === 0) {
       report +=
         "No specific recommendations at this time. Database appears well-optimized.\n";
@@ -505,11 +515,11 @@ export const CONNECTION_POOL_CONFIG = {
 /**
  * Query optimization utilities
  */
-export class QueryOptimizer {
+export const QueryOptimizer = {
   /**
    * Get optimized feed query for a user
    */
-  static getFeedQuery(userFid: number, limit = 50, offset = 0) {
+  getFeedQuery(userFid: number, limit = 50, offset = 0) {
     return sql`
       SELECT 
         c.hash,
@@ -532,12 +542,12 @@ export class QueryOptimizer {
       LIMIT ${limit}
       OFFSET ${offset}
     `;
-  }
+  },
 
   /**
    * Get optimized user engagement query
    */
-  static getUserEngagementQuery(userFid: number, days = 30) {
+  getUserEngagementQuery(userFid: number, days = 30) {
     return sql`
       SELECT 
         COUNT(*) FILTER (WHERE r.type = 'like') as likes_received,
@@ -546,14 +556,14 @@ export class QueryOptimizer {
       FROM casts c
       LEFT JOIN reactions r ON c.hash = r.target_hash
       WHERE c.fid = ${userFid}
-        AND c.timestamp > NOW() - INTERVAL '${sql.raw(days + " days")}'
+        AND c.timestamp > NOW() - INTERVAL '${sql.raw(`${days} days`)}'
     `;
-  }
+  },
 
   /**
    * Get optimized trending content query
    */
-  static getTrendingQuery(hours = 24, limit = 50) {
+  getTrendingQuery(hours = 24, limit = 50) {
     return sql`
       SELECT 
         c.hash,
@@ -569,14 +579,14 @@ export class QueryOptimizer {
       FROM casts c
       INNER JOIN users u ON c.fid = u.fid
       LEFT JOIN reactions r ON c.hash = r.target_hash
-      WHERE c.timestamp > NOW() - INTERVAL '${sql.raw(hours + " hours")}'
+      WHERE c.timestamp > NOW() - INTERVAL '${sql.raw(`${hours} hours`)}'
       GROUP BY c.hash, c.fid, c.text, c.timestamp, u.username, u.display_name
       HAVING COUNT(r.hash) > 0
       ORDER BY engagement_score DESC, c.timestamp DESC
       LIMIT ${limit}
     `;
-  }
-}
+  },
+};
 
 /**
  * Performance monitoring utilities

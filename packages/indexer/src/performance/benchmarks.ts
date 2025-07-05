@@ -5,7 +5,7 @@
  * the performance of various system components.
  */
 
-import { performance } from "perf_hooks";
+import { performance } from "node:perf_hooks";
 
 export interface BenchmarkResult {
   name: string;
@@ -196,17 +196,17 @@ export class BenchmarkSuiteRunner {
     report += `Tests Run: ${suite.results.length}\n`;
 
     if (suite.memoryLeakDetected) {
-      report += `⚠️  Potential memory leak detected!\n`;
+      report += "⚠️  Potential memory leak detected!\n";
     }
 
-    report += `\n📋 Individual Results:\n`;
+    report += "\n📋 Individual Results:\n";
     report += `${"-".repeat(50)}\n`;
 
-    suite.results.forEach((result) => {
+    for (const result of suite.results) {
       const memoryMB = result.memoryDelta.heapUsed / (1024 * 1024);
       report += `${result.name.padEnd(30)} ${result.duration.toFixed(2)}ms`;
       report += ` (${memoryMB > 0 ? "+" : ""}${memoryMB.toFixed(2)}MB)\n`;
-    });
+    }
 
     return report;
   }
@@ -446,21 +446,25 @@ export class SystemMonitor {
     const memoryGrowth = latest.memory.heapUsed - first.memory.heapUsed;
     const timespan = latest.timestamp - first.timestamp;
 
-    let report = `\n🖥️  System Monitor Report\n`;
+    let report = "\n🖥️  System Monitor Report\n";
     report += `${"=".repeat(50)}\n`;
     report += `Monitoring Period: ${(timespan / 1000).toFixed(1)}s\n`;
     report += `Measurements: ${measurements.length}\n`;
     report += `Current Memory Usage: ${latest.memory.heapUsed.toFixed(2)}MB\n`;
-    report += `Memory Growth: ${memoryGrowth > 0 ? "+" : ""}${memoryGrowth.toFixed(2)}MB\n`;
+    report += `Memory Growth: ${
+      memoryGrowth > 0 ? "+" : ""
+    }${memoryGrowth.toFixed(2)}MB\n`;
     report += `System Uptime: ${latest.uptime.toFixed(1)}s\n`;
 
     // Memory trend analysis
     if (memoryGrowth > 10) {
-      report += `⚠️  High memory growth detected (${memoryGrowth.toFixed(2)}MB)\n`;
+      report += `⚠️  High memory growth detected (${memoryGrowth.toFixed(
+        2
+      )}MB)\n`;
     } else if (memoryGrowth > 5) {
       report += `📈 Moderate memory growth (${memoryGrowth.toFixed(2)}MB)\n`;
     } else {
-      report += `✅ Memory usage stable\n`;
+      report += "✅ Memory usage stable\n";
     }
 
     return report;
@@ -481,7 +485,7 @@ export const benchmarks = {
  * Generate a comprehensive performance report
  */
 export function generatePerformanceReport(): string {
-  let report = `\n🚀 Farcaster Indexer Performance Report\n`;
+  let report = "\n🚀 Farcaster Indexer Performance Report\n";
   report += `${"=".repeat(60)}\n`;
   report += `Generated: ${new Date().toISOString()}\n`;
 
@@ -546,7 +550,9 @@ export function validatePerformance(): {
   const dbResults = benchmarks.database.getResults();
   if (dbResults.averageDuration > PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX) {
     failures.push(
-      `Database average duration ${dbResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX}ms`
+      `Database average duration ${dbResults.averageDuration.toFixed(
+        2
+      )}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.DATABASE_QUERY_MAX}ms`
     );
   }
 
@@ -554,7 +560,9 @@ export function validatePerformance(): {
   const apiResults = benchmarks.api.getResults();
   if (apiResults.averageDuration > PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX) {
     failures.push(
-      `API average duration ${apiResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX}ms`
+      `API average duration ${apiResults.averageDuration.toFixed(
+        2
+      )}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.API_RESPONSE_MAX}ms`
     );
   }
 
@@ -564,7 +572,9 @@ export function validatePerformance(): {
     jobResults.averageDuration > PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX
   ) {
     warnings.push(
-      `Job average duration ${jobResults.averageDuration.toFixed(2)}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX}ms`
+      `Job average duration ${jobResults.averageDuration.toFixed(
+        2
+      )}ms exceeds threshold ${PERFORMANCE_THRESHOLDS.JOB_PROCESS_EVENT_MAX}ms`
     );
   }
 

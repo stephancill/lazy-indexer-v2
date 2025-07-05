@@ -30,7 +30,7 @@ const ClientTargets: React.FC = () => {
     if (!newFid.trim()) return;
 
     const fid = Number.parseInt(newFid.trim());
-    if (isNaN(fid) || fid <= 0) {
+    if (Number.isNaN(fid) || fid <= 0) {
       return;
     }
 
@@ -138,7 +138,7 @@ const ClientTargets: React.FC = () => {
           {loading && clientTargets.length === 0 ? (
             <div className="flex items-center justify-center h-32">
               <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
                 <span className="text-gray-600">Loading client targets...</span>
               </div>
             </div>

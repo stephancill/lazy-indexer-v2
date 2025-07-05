@@ -26,7 +26,7 @@ export interface ClientTarget {
 export interface Job {
   id: string;
   name: string;
-  data: any;
+  data: unknown;
   status: "active" | "waiting" | "completed" | "failed" | "delayed";
   progress: number;
   createdAt: string;
@@ -84,7 +84,7 @@ export interface Cast {
   parentFid?: number;
   parentUrl?: string;
   timestamp: string;
-  embeds?: any[];
+  embeds?: unknown[];
   author?: {
     fid: number;
     username?: string;
@@ -115,12 +115,12 @@ export interface Link {
   timestamp: string;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T> {

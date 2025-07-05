@@ -22,7 +22,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
     }
 
     // Verify JWT token
-    const decoded = jwt.verify(token, config.auth.jwtSecret) as any;
+    const decoded = jwt.verify(token, config.auth.jwtSecret) as jwt.JwtPayload;
 
     if (!decoded || typeof decoded !== "object" || !decoded.id) {
       return c.json({ error: "Invalid token" }, 401);
@@ -65,10 +65,10 @@ export const generateToken = (
   );
 };
 
-export const verifyToken = (token: string): any => {
+export const verifyToken = (token: string): jwt.JwtPayload | null => {
   try {
-    return jwt.verify(token, config.auth.jwtSecret);
-  } catch (error) {
+    return jwt.verify(token, config.auth.jwtSecret) as jwt.JwtPayload;
+  } catch (_error) {
     return null;
   }
 };

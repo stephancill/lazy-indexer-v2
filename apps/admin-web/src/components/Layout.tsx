@@ -38,11 +38,20 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-gray-50">
       {/* Mobile sidebar */}
       <div
-        className={`fixed inset-0 z-50 lg:hidden ${sidebarOpen ? "block" : "hidden"}`}
+        className={`fixed inset-0 z-50 lg:hidden ${
+          sidebarOpen ? "block" : "hidden"
+        }`}
       >
         <div
           className="fixed inset-0 bg-gray-600 bg-opacity-75"
           onClick={() => setSidebarOpen(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setSidebarOpen(false);
+            }
+          }}
+          role="button"
+          tabIndex={0}
         />
         <div className="relative flex flex-col max-w-xs w-full bg-white shadow-xl">
           <div className="absolute top-0 right-0 -mr-12 pt-2">
@@ -88,6 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
           <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
             <button
+              type="button"
               onClick={handleLogout}
               className="flex items-center w-full px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900"
             >
@@ -134,6 +144,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             <div className="flex-shrink-0 flex border-t border-gray-200 p-4">
               <button
+                type="button"
                 onClick={handleLogout}
                 className="flex items-center w-full px-2 py-2 text-sm font-medium text-gray-600 rounded-md hover:bg-gray-50 hover:text-gray-900"
               >

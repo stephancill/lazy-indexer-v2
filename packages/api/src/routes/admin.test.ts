@@ -81,7 +81,7 @@ describe("Admin Routes", () => {
         from: vi.fn(() => ({
           where: vi.fn(() => [{ count: 50 }]),
         })),
-      } as any);
+      } as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/admin/targets");
       expect(res.status).toBe(200);

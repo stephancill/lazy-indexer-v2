@@ -8,18 +8,22 @@ import { CONNECTION_POOL_CONFIG } from "./optimizations.js";
 function getConnectionConfig() {
   if (isProduction()) {
     return CONNECTION_POOL_CONFIG.PRODUCTION;
-  } else if (isTest()) {
-    return CONNECTION_POOL_CONFIG.TEST;
-  } else {
-    return CONNECTION_POOL_CONFIG.DEVELOPMENT;
   }
+  if (isTest()) {
+    return CONNECTION_POOL_CONFIG.TEST;
+  }
+  return CONNECTION_POOL_CONFIG.DEVELOPMENT;
 }
 
 // Create a connection pool for the main database with optimized settings
 const poolConfig = getConnectionConfig();
 const queryClient = postgres(config.postgres.connectionString, {
   ...poolConfig,
-  onnotice: config.postgres?.logQueries ? console.log : () => {},
+  onnotice: config.postgres?.logQueries
+    ? console.log
+    : () => {
+        // Ignore notices when not logging queries
+      },
   transform: {
     undefined: null, // Convert undefined to null for PostgreSQL compatibility
   },
@@ -49,7 +53,9 @@ export function getTestDb() {
       max: 5,
       idle_timeout: 10,
       max_lifetime: 60 * 10, // 10 minutes
-      onnotice: () => {},
+      onnotice: () => {
+        // Ignore notices in test environment
+      },
     });
     testDb = drizzle(testClient, { schema });
   }
@@ -125,8 +131,9 @@ export async function batchInsert<T extends Record<string, any>>(
 export async function safeDbOperation<T>(
   operation: () => Promise<T>,
   retries = 3,
-  delay = 1000
+  baseDelay = 1000
 ): Promise<T> {
+  let delay = baseDelay;
   for (let i = 0; i < retries; i++) {
     try {
       return await operation();
@@ -146,11 +153,7 @@ export async function safeDbOperation<T>(
 }
 
 // Query building helpers
-export function buildPaginationQuery(
-  page = 1,
-  limit = 50,
-  maxLimit = 1000
-) {
+export function buildPaginationQuery(page = 1, limit = 50, maxLimit = 1000) {
   const safeLimit = Math.min(Math.max(limit, 1), maxLimit);
   const offset = (Math.max(page, 1) - 1) * safeLimit;
 

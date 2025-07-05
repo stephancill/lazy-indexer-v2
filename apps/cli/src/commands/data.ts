@@ -2,8 +2,8 @@ import { Command } from "commander";
 import { db, schema } from "@farcaster-indexer/shared";
 import { eq, inArray } from "drizzle-orm";
 import { logger } from "../utils/logger.js";
-import { writeFile, readFile } from "fs/promises";
-import { existsSync } from "fs";
+import { writeFile, readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 
 const {
   targets,
@@ -33,7 +33,10 @@ export const exportCommand = new Command("export")
     try {
       logger.startSpinner("Exporting data...");
 
-      const exportData: any = {
+      const exportData: {
+        exportedAt: string;
+        tables: Record<string, unknown>;
+      } = {
         exportedAt: new Date().toISOString(),
         tables: {},
       };
@@ -43,7 +46,7 @@ export const exportCommand = new Command("export")
         ? options.fids
             .split(",")
             .map((f: string) => Number.parseInt(f.trim()))
-            .filter((f: number) => !isNaN(f))
+            .filter((f: number) => !Number.isNaN(f))
         : undefined;
 
       // Export targets
@@ -145,7 +148,7 @@ export const exportCommand = new Command("export")
       }
 
       const totalRecords = Object.values(exportData.tables).reduce(
-        (sum: number, table: any) =>
+        (sum: number, table: unknown) =>
           sum + (Array.isArray(table) ? table.length : 0),
         0
       );

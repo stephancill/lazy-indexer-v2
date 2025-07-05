@@ -285,7 +285,11 @@ export class ProcessorWorker {
         userUpdates.set(fid, { fid, syncedAt: new Date() });
       }
 
-      const updateData = userUpdates.get(fid)!;
+      const updateData = userUpdates.get(fid);
+      if (!updateData) {
+        console.warn(`No update data found for fid: ${fid}`);
+        continue;
+      }
 
       switch (userDataBody.type) {
         case "PFP":

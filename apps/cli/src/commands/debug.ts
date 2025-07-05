@@ -17,7 +17,7 @@ export const debugCommand = new Command("debug")
       .action(async (fid, options) => {
         try {
           const fidNum = Number.parseInt(fid);
-          if (isNaN(fidNum) || fidNum <= 0) {
+          if (Number.isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
           }
@@ -157,13 +157,13 @@ export const debugCommand = new Command("debug")
             if (recentCasts.length > 0) {
               logger.line();
               logger.info("Recent Casts:");
-              recentCasts.forEach((cast) => {
+              for (const cast of recentCasts) {
                 logger.info(
                   `  ${cast.timestamp.toISOString()}: ${
                     cast.text?.substring(0, 100) || "No text"
                   }...`
                 );
-              });
+              }
             }
           }
         } catch (error) {
@@ -188,7 +188,7 @@ export const debugCommand = new Command("debug")
       .action(async (fid, options) => {
         try {
           const fidNum = Number.parseInt(fid);
-          if (isNaN(fidNum) || fidNum <= 0) {
+          if (Number.isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
           }
@@ -197,8 +197,8 @@ export const debugCommand = new Command("debug")
             `Fetching ${options.type} for FID ${fidNum} from hub...`
           );
 
-          const hubClient = new HubClient(config.hubs);
-          let data;
+          const _hubClient = new HubClient(config.hubs);
+          let data: unknown;
 
           // Note: Hub client methods need to be implemented in the shared package
           logger.warn("Hub client debug functionality not yet implemented");
@@ -263,7 +263,7 @@ export const debugCommand = new Command("debug")
             const type = await redisClient.type(options.key);
             const ttl = await redisClient.ttl(options.key);
 
-            let value;
+            let value: unknown;
             switch (type) {
               case "string":
                 value = await redisClient.get(options.key);
@@ -301,11 +301,11 @@ export const debugCommand = new Command("debug")
                   ttl === -1
                     ? "No expiration"
                     : ttl === -2
-                      ? "Expired/Not exists"
-                      : `${ttl} seconds`
+                    ? "Expired/Not exists"
+                    : `${ttl} seconds`
                 }`
               );
-              logger.info(`Value:`);
+              logger.info("Value:");
               logger.json(value);
             }
           } else {
@@ -355,8 +355,8 @@ export const debugCommand = new Command("debug")
                       info.ttl === -1
                         ? "No expiration"
                         : info.ttl === -2
-                          ? "Expired/Not exists"
-                          : info.ttl,
+                        ? "Expired/Not exists"
+                        : info.ttl,
                     Size: info.size,
                   }))
                 );
@@ -396,7 +396,7 @@ export const debugCommand = new Command("debug")
             logger.info("Queue System Status:");
             logger.line();
 
-            queueStats.forEach((stat) => {
+            for (const stat of queueStats) {
               logger.info(`Queue: ${stat.queue}`);
               logger.info(`  Status: ${stat.paused ? "Paused" : "Running"}`);
               logger.info(`  Waiting Jobs: ${stat.waiting}`);
@@ -405,7 +405,7 @@ export const debugCommand = new Command("debug")
               logger.info(`  Failed Jobs: ${stat.failed}`);
               logger.info(`  Delayed Jobs: ${stat.delayed}`);
               logger.line();
-            });
+            }
 
             const hasIssues = queueStats.some(
               (stat) => stat.failed > 0 || stat.paused > 0

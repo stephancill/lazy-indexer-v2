@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db, schema } from "@farcaster-indexer/shared";
-import { eq, desc, and, sql, asc, ilike, or } from "drizzle-orm";
+import { eq, desc, and, sql, asc, ilike, or, type Column } from "drizzle-orm";
 import { authMiddleware } from "../middleware/auth.js";
 import {
   validateFid,
@@ -59,7 +59,7 @@ adminRoutes.get("/targets", async (c) => {
 
     // Text search on FID
     if (search) {
-      whereClause = sql`${targets.fid}::text ILIKE ${"%" + search + "%"}`;
+      whereClause = sql`${targets.fid}::text ILIKE ${`%${search}%`}`;
     }
 
     // Filter by root status
@@ -90,7 +90,7 @@ adminRoutes.get("/targets", async (c) => {
 
     // Sorting
     const orderBy = sortOrder === "asc" ? asc : desc;
-    let sortColumn;
+    let sortColumn: Column;
     switch (sortBy) {
       case "fid":
         sortColumn = targets.fid;
@@ -250,7 +250,7 @@ adminRoutes.put("/targets/:fid", async (c) => {
     }
 
     // Update target (only if isRoot is provided)
-    const updateData: any = {};
+    const updateData: { isRoot?: boolean } = {};
     if (isRoot !== undefined) {
       updateData.isRoot = isRoot;
     }
@@ -512,20 +512,17 @@ adminRoutes.get("/jobs", async (c) => {
     const stats = await getAllQueueStats();
 
     // Transform into a more structured format
-    const jobStats = stats.reduce(
-      (acc, stat) => {
-        acc[stat.queue + "Queue"] = {
-          active: stat.active,
-          waiting: stat.waiting,
-          completed: stat.completed,
-          failed: stat.failed,
-          delayed: stat.delayed,
-          paused: stat.paused,
-        };
-        return acc;
-      },
-      {} as Record<string, any>
-    );
+    const jobStats = stats.reduce((acc, stat) => {
+      acc[`${stat.queue}Queue`] = {
+        active: stat.active,
+        waiting: stat.waiting,
+        completed: stat.completed,
+        failed: stat.failed,
+        delayed: stat.delayed,
+        paused: stat.paused,
+      };
+      return acc;
+    }, {} as Record<string, { active: number; waiting: number; completed: number; failed: number; delayed: number; paused: number }>);
 
     return c.json({
       jobs: jobStats,

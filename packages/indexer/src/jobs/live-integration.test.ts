@@ -143,7 +143,7 @@ describe("Live Farcaster Hub Integration", () => {
       let success = false;
       try {
         const response = await hubClient.getHubInfo();
-        if (response && response.version) {
+        if (response?.version) {
           success = true;
         }
       } catch (error) {
@@ -305,9 +305,11 @@ describe("Live Farcaster Hub Integration", () => {
         // Handle different message types
         if (cast.data.type === "MESSAGE_TYPE_CAST_ADD") {
           expect(cast.data.castAddBody).toBeDefined();
-          const castBody = cast.data.castAddBody!;
-          expect(typeof castBody.text).toBe("string");
-          expect(Array.isArray(castBody.embeds)).toBe(true);
+          const castBody = cast.data.castAddBody;
+          if (castBody) {
+            expect(typeof castBody.text).toBe("string");
+            expect(Array.isArray(castBody.embeds)).toBe(true);
+          }
         } else if (cast.data.type === "MESSAGE_TYPE_CAST_REMOVE") {
           expect(cast.data.castRemoveBody).toBeDefined();
         }

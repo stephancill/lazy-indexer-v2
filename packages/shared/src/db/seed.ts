@@ -210,11 +210,11 @@ export async function seedDevelopmentData() {
     }));
 
     const allTargets = [...rootTargets];
-    additionalTargets.forEach((target) => {
+    for (const target of additionalTargets) {
       if (!allTargets.some((t) => t.fid === target.fid)) {
         allTargets.push(target);
       }
-    });
+    }
 
     await db.insert(schema.targets).values(allTargets).onConflictDoNothing();
     console.log(`✅ Inserted ${allTargets.length} targets`);

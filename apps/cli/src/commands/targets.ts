@@ -92,7 +92,7 @@ export const targetCommands = new Command("targets")
       .action(async (fid, options) => {
         try {
           const fidNum = Number.parseInt(fid);
-          if (isNaN(fidNum) || fidNum <= 0) {
+          if (Number.isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
           }
@@ -137,14 +137,14 @@ export const targetCommands = new Command("targets")
 
         try {
           const fidNum = Number.parseInt(fid);
-          if (isNaN(fidNum) || fidNum <= 0) {
+          if (Number.isNaN(fidNum) || fidNum <= 0) {
             logger.error("FID must be a positive number");
             process.exit(1);
           }
 
           logger.startSpinner(`Removing target ${fidNum}...`);
 
-          const result = await db
+          const _result = await db
             .delete(targets)
             .where(eq(targets.fid, fidNum));
 
@@ -252,7 +252,7 @@ export const targetCommands = new Command("targets")
           .action(async (fid) => {
             try {
               const fidNum = Number.parseInt(fid);
-              if (isNaN(fidNum) || fidNum <= 0) {
+              if (Number.isNaN(fidNum) || fidNum <= 0) {
                 logger.error("FID must be a positive number");
                 process.exit(1);
               }
@@ -295,14 +295,14 @@ export const targetCommands = new Command("targets")
 
             try {
               const fidNum = Number.parseInt(fid);
-              if (isNaN(fidNum) || fidNum <= 0) {
+              if (Number.isNaN(fidNum) || fidNum <= 0) {
                 logger.error("FID must be a positive number");
                 process.exit(1);
               }
 
               logger.startSpinner(`Removing client target ${fidNum}...`);
 
-              const result = await db
+              const _result = await db
                 .delete(targetClients)
                 .where(eq(targetClients.clientFid, fidNum));
 

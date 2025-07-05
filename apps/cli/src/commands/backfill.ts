@@ -22,11 +22,11 @@ export const backfillCommand = new Command("backfill")
         try {
           logger.startSpinner("Preparing backfill jobs...");
 
-          let targetsToBackfill;
+          let targetsToBackfill: { fid: number; isRoot: boolean }[];
 
           if (options.fid) {
             const fidNum = Number.parseInt(options.fid);
-            if (isNaN(fidNum) || fidNum <= 0) {
+            if (Number.isNaN(fidNum) || fidNum <= 0) {
               logger.error("FID must be a positive number");
               process.exit(1);
             }
@@ -156,7 +156,7 @@ export const backfillCommand = new Command("backfill")
 
           if (options.fid) {
             const fidNum = Number.parseInt(options.fid);
-            if (isNaN(fidNum) || fidNum <= 0) {
+            if (Number.isNaN(fidNum) || fidNum <= 0) {
               logger.error("FID must be a positive number");
               process.exit(1);
             }

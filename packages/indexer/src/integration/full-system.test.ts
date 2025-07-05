@@ -34,13 +34,13 @@ vi.mock("bullmq", () => ({
   })),
 }));
 
-const { targets, targetClients, casts, reactions, links, users } = schema;
+const { targets, targetClients, casts, reactions, links } = schema;
 
 describe("Full System Integration Tests", () => {
   let backfillQueue: Queue;
   let realtimeQueue: Queue;
   let processorQueue: Queue;
-  let realtimeWorker: RealtimeWorker;
+  let _realtimeWorker: RealtimeWorker;
   let processorWorker: ProcessorWorker;
   let backfillWorker: BackfillWorker;
 
@@ -84,7 +84,7 @@ describe("Full System Integration Tests", () => {
 
     // Initialize workers with hub client
     const hubClient = new HubClient(config.hubs);
-    realtimeWorker = new RealtimeWorker(hubClient);
+    _realtimeWorker = new RealtimeWorker(hubClient);
     processorWorker = new ProcessorWorker();
     backfillWorker = new BackfillWorker(hubClient);
   });

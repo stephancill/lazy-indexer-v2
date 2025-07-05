@@ -1,7 +1,7 @@
 import type { Context, Next } from "hono";
 
 // Input validation helpers
-export const validateFid = (fid: any): number | null => {
+export const validateFid = (fid: unknown): number | null => {
   // Only accept strings and numbers
   if (typeof fid !== "string" && typeof fid !== "number") {
     return null;
@@ -18,7 +18,7 @@ export const validateFid = (fid: any): number | null => {
   const parsed = Number.parseInt(fidStr, 10);
 
   // Check for valid range and safe integer
-  if (isNaN(parsed) || parsed <= 0 || !Number.isSafeInteger(parsed)) {
+  if (Number.isNaN(parsed) || parsed <= 0 || !Number.isSafeInteger(parsed)) {
     return null;
   }
 
@@ -30,8 +30,8 @@ export const validatePagination = (limit?: string, offset?: string) => {
   const parsedOffset = Math.max(Number.parseInt(offset || "0"), 0);
 
   return {
-    limit: isNaN(parsedLimit) ? 50 : parsedLimit,
-    offset: isNaN(parsedOffset) ? 0 : parsedOffset,
+    limit: Number.isNaN(parsedLimit) ? 50 : parsedLimit,
+    offset: Number.isNaN(parsedOffset) ? 0 : parsedOffset,
   };
 };
 
@@ -43,7 +43,7 @@ export const validateDate = (dateString?: string): Date | null => {
   if (!dateString) return null;
 
   const date = new Date(dateString);
-  if (isNaN(date.getTime())) {
+  if (Number.isNaN(date.getTime())) {
     return null;
   }
 
@@ -67,7 +67,7 @@ export const validateFidParam = async (c: Context, next: Next) => {
   }
 
   // Store validated fid in context variables
-  c.set("validatedFid" as any, fid);
+  c.set("validatedFid", fid);
   await next();
 };
 
@@ -85,19 +85,19 @@ export const validateQueueParam = async (c: Context, next: Next) => {
   }
 
   // Store validated queue name in context variables
-  c.set("validatedQueue" as any, queueName);
+  c.set("validatedQueue", queueName);
   await next();
 };
 
 // Request body validation
 export const validateTargetBody = (
-  body: any
+  body: unknown
 ): { fid: number; isRoot?: boolean } | string => {
   if (!body || typeof body !== "object") {
     return "Request body is required";
   }
 
-  const { fid, isRoot } = body;
+  const { fid, isRoot } = body as Record<string, unknown>;
 
   const validatedFid = validateFid(fid);
   if (validatedFid === null) {
@@ -111,13 +111,13 @@ export const validateTargetBody = (
 };
 
 export const validateClientTargetBody = (
-  body: any
+  body: unknown
 ): { clientFid: number } | string => {
   if (!body || typeof body !== "object") {
     return "Request body is required";
   }
 
-  const { clientFid } = body;
+  const { clientFid } = body as Record<string, unknown>;
 
   const validatedFid = validateFid(clientFid);
   if (validatedFid === null) {
@@ -128,13 +128,13 @@ export const validateClientTargetBody = (
 };
 
 export const validateTargetUpdateBody = (
-  body: any
+  body: unknown
 ): { isRoot?: boolean } | string => {
   if (!body || typeof body !== "object") {
     return "Request body is required";
   }
 
-  const { isRoot } = body;
+  const { isRoot } = body as Record<string, unknown>;
 
   if (isRoot !== undefined && typeof isRoot !== "boolean") {
     return "isRoot must be a boolean value";

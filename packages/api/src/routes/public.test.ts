@@ -2,33 +2,68 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Hono } from "hono";
 import { publicRoutes } from "./public.js";
 
-// Mock the database
+// Mock the shared package
 vi.mock("@farcaster-indexer/shared", () => ({
   db: {
     query: {
       users: {
         findFirst: vi.fn(),
-      },
-      casts: {
-        findFirst: vi.fn(),
         findMany: vi.fn(),
       },
-      links: {
+      casts: {
+        findMany: vi.fn(),
+        findFirst: vi.fn(),
+      },
+      follows: {
         findMany: vi.fn(),
       },
     },
-    select: vi.fn(() => ({
-      from: vi.fn(() => ({
-        where: vi.fn(() => [{ count: 10 }]),
-      })),
-    })),
+    select: vi.fn(),
   },
-  schema: {
-    casts: {},
-    users: {},
-    links: {},
-    reactions: {},
+  users: {
+    fid: "fid",
+    username: "username",
+    displayName: "displayName",
+    pfpUrl: "pfpUrl",
+    followerCount: "followerCount",
+    followingCount: "followingCount",
+    bioText: "bioText",
+    custodyAddress: "custodyAddress",
+    verifiedAddresses: "verifiedAddresses",
+    activeStatus: "activeStatus",
+    powerBadge: "powerBadge",
+    lastSyncedAt: "lastSyncedAt",
   },
+  casts: {
+    hash: "hash",
+    fid: "fid",
+    threadHash: "threadHash",
+    parentHash: "parentHash",
+    parentFid: "parentFid",
+    parentUrl: "parentUrl",
+    text: "text",
+    embeds: "embeds",
+    mentions: "mentions",
+    mentionsPositions: "mentionsPositions",
+    timestamp: "timestamp",
+    type: "type",
+    replyCount: "replyCount",
+    recastCount: "recastCount",
+    likeCount: "likeCount",
+    deletedAt: "deletedAt",
+  },
+  follows: {
+    fid: "fid",
+    targetFid: "targetFid",
+    timestamp: "timestamp",
+    deletedAt: "deletedAt",
+  },
+  and: vi.fn(),
+  eq: vi.fn(),
+  desc: vi.fn(),
+  isNull: vi.fn(),
+  sql: vi.fn(),
+  count: vi.fn(),
 }));
 
 // Create test app with public routes
@@ -51,11 +86,11 @@ describe("Public Routes", () => {
       // Mock database response
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.query.users.findFirst).mockResolvedValue(mockUser);
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+      vi.mocked(db.select).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 5 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/users/1");
       expect(res.status).toBe(200);
@@ -101,11 +136,11 @@ describe("Public Routes", () => {
 
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.query.casts.findFirst).mockResolvedValue(mockCast);
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+      vi.mocked(db.select).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 3 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request(
         "/v1/casts/0x1234567890abcdef1234567890abcdef12345678"
@@ -162,16 +197,16 @@ describe("Public Routes", () => {
 
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.select).mockReturnValueOnce({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => mockFollowing),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
       vi.mocked(db.query.casts.findMany).mockResolvedValue(mockCasts);
       vi.mocked(db.select).mockReturnValueOnce({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 50 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/feed/1");
       expect(res.status).toBe(200);
@@ -185,10 +220,10 @@ describe("Public Routes", () => {
     it("should return empty feed for user with no following", async () => {
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => []),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/feed/1");
       expect(res.status).toBe(200);
@@ -212,16 +247,16 @@ describe("Public Routes", () => {
 
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.select).mockReturnValueOnce({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => mockFollowing),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
       vi.mocked(db.query.casts.findMany).mockResolvedValue(mockCasts);
       vi.mocked(db.select).mockReturnValueOnce({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 100 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/feed/1?limit=10&offset=20");
       expect(res.status).toBe(200);
@@ -247,11 +282,11 @@ describe("Public Routes", () => {
 
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.query.casts.findMany).mockResolvedValue(mockCasts);
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+      vi.mocked(db.select).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 25 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/users/1/casts");
       expect(res.status).toBe(200);
@@ -275,12 +310,12 @@ describe("Public Routes", () => {
       ];
 
       const { db } = await import("@farcaster-indexer/shared");
-      vi.mocked(db.query.links.findMany).mockResolvedValue(mockFollowers);
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+      vi.mocked(db.query.follows.findMany).mockResolvedValue(mockFollowers);
+      vi.mocked(db.select).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 15 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/users/1/followers");
       expect(res.status).toBe(200);
@@ -304,12 +339,12 @@ describe("Public Routes", () => {
       ];
 
       const { db } = await import("@farcaster-indexer/shared");
-      vi.mocked(db.query.links.findMany).mockResolvedValue(mockFollowing);
-      vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+      vi.mocked(db.query.follows.findMany).mockResolvedValue(mockFollowing);
+      vi.mocked(db.select).mockReturnValueOnce({
+        from: vi.fn().mockReturnValue({
           where: vi.fn(() => [{ count: 20 }]),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
 
       const res = await testApp.request("/v1/users/1/following");
       expect(res.status).toBe(200);
@@ -348,7 +383,7 @@ describe("Public Routes", () => {
 
       const { db } = await import("@farcaster-indexer/shared");
       vi.mocked(db.select).mockReturnValue({
-        from: vi.fn(() => ({
+        from: vi.fn().mockReturnValue({
           leftJoin: vi.fn(() => ({
             where: vi.fn(() => ({
               groupBy: vi.fn(() => ({
@@ -360,8 +395,8 @@ describe("Public Routes", () => {
               })),
             })),
           })),
-        })),
-      } as any);
+        }),
+      } as unknown as ReturnType<typeof db.select>);
       vi.mocked(db.query.casts.findMany).mockResolvedValue(mockCastsWithUsers);
 
       const res = await testApp.request("/v1/trending");

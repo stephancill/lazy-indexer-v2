@@ -10,7 +10,7 @@ beforeAll(() => {
 
 afterAll(async () => {
   await closeTestDb();
-  delete process.env.NODE_ENV;
+  process.env.NODE_ENV = undefined;
 });
 
 beforeEach(() => {

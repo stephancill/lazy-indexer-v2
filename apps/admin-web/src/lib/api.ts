@@ -38,14 +38,14 @@ class ApiClient {
     return this.request<T>(endpoint);
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<T> {
+  async post<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: "POST",
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<T> {
+  async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
@@ -83,7 +83,9 @@ export const api = {
         isRoot?: boolean;
       }) =>
         apiClient.get(
-          `/api/admin/targets?${new URLSearchParams(params as any).toString()}`
+          `/api/admin/targets?${new URLSearchParams(
+            params as Record<string, string>
+          ).toString()}`
         ),
       get: (fid: number) => apiClient.get(`/api/admin/targets/${fid}`),
       create: (data: { fid: number; isRoot: boolean }) =>

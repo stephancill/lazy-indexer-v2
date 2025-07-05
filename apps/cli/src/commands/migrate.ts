@@ -92,7 +92,7 @@ export const migrateCommand = new Command("migrate")
           logger.startSpinner("Checking database status...");
 
           // Test connection
-          const result = await db.execute(sql`SELECT 1 as test`);
+          const _result = await db.execute(sql`SELECT 1 as test`);
           logger.debug("Database connection test result:", "DB");
 
           // Try to check if migrations table exists
@@ -102,7 +102,7 @@ export const migrateCommand = new Command("migrate")
               true,
               "Database is connected and migrations table exists"
             );
-          } catch (error) {
+          } catch (_error) {
             logger.stopSpinner(
               true,
               "Database is connected but migrations table not found"

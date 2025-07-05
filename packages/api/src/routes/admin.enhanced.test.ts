@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { Hono } from "hono";
+import type { Context, Next } from "hono";
 import { adminRoutes } from "./admin.js";
 import { authMiddleware } from "../middleware/auth.js";
 
@@ -17,15 +18,11 @@ vi.mock("@farcaster-indexer/shared", () => ({
       },
     },
     insert: vi.fn().mockReturnValue({ returning: vi.fn() }),
-    update: vi
-      .fn()
-      .mockReturnValue({
-        set: vi
-          .fn()
-          .mockReturnValue({
-            where: vi.fn().mockReturnValue({ returning: vi.fn() }),
-          }),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({ returning: vi.fn() }),
       }),
+    }),
     delete: vi.fn().mockReturnValue({ where: vi.fn() }),
     select: vi
       .fn()
@@ -65,7 +62,7 @@ vi.mock("@farcaster-indexer/indexer", () => ({
 
 // Mock auth middleware to allow all requests
 vi.mock("../middleware/auth.js", () => ({
-  authMiddleware: vi.fn(async (c: any, next: any) => {
+  authMiddleware: vi.fn(async (_c: Context, next: Next) => {
     await next();
   }),
 }));
@@ -74,7 +71,7 @@ vi.mock("../middleware/auth.js", () => ({
 vi.mock("../middleware/validation.js", () => ({
   validateFid: vi.fn((fid) => {
     const parsed = Number.parseInt(fid);
-    return isNaN(parsed) || parsed <= 0 ? null : parsed;
+    return Number.isNaN(parsed) || parsed <= 0 ? null : parsed;
   }),
   validateQueueName: vi.fn((queue) => {
     const valid = ["backfill", "realtime", "process-event"];
@@ -83,13 +80,13 @@ vi.mock("../middleware/validation.js", () => ({
   validateTargetBody: vi.fn((body) => {
     if (!body?.fid) return "Valid FID is required";
     const fid = Number.parseInt(body.fid);
-    if (isNaN(fid) || fid <= 0) return "Valid FID is required";
+    if (Number.isNaN(fid) || fid <= 0) return "Valid FID is required";
     return { fid, isRoot: body.isRoot === true };
   }),
   validateClientTargetBody: vi.fn((body) => {
     if (!body?.clientFid) return "Valid client FID is required";
     const clientFid = Number.parseInt(body.clientFid);
-    if (isNaN(clientFid) || clientFid <= 0)
+    if (Number.isNaN(clientFid) || clientFid <= 0)
       return "Valid client FID is required";
     return { clientFid };
   }),
@@ -105,9 +102,9 @@ vi.mock("../middleware/validation.js", () => ({
   validateDate: vi.fn((dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
-    return isNaN(date.getTime()) ? null : date;
+    return Number.isNaN(date.getTime()) ? null : date;
   }),
-  adminRateLimit: vi.fn(async (c: any, next: any) => {
+  adminRateLimit: vi.fn(async (_c: Context, next: Next) => {
     await next();
   }),
 }));

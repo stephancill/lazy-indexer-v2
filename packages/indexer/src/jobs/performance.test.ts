@@ -1,4 +1,10 @@
 import { describe, it, expect, beforeAll, vi } from "vitest";
+import {
+  addTargetToSet,
+  isTargetInSet,
+  loadTargetsIntoSet,
+  getAllQueueStats,
+} from "../queue.js";
 
 // Mock all Redis-dependent functions
 vi.mock("../queue.js", () => ({
@@ -113,7 +119,7 @@ describe("Performance Tests", () => {
 
   describe("Concurrent Operations", () => {
     it("should handle concurrent target operations", async () => {
-      const concurrentPromises: Promise<any>[] = [];
+      const concurrentPromises: Promise<unknown>[] = [];
       const startTime = Date.now();
 
       // Create 50 concurrent operations

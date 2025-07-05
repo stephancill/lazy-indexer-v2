@@ -1,4 +1,5 @@
 import { config, HubClient } from "@farcaster-indexer/shared";
+import type { Worker, Job } from "bullmq";
 import {
   createBackfillWorker,
   createRealtimeWorker,
@@ -14,8 +15,7 @@ import { monitoringApp } from "./monitoring.js";
 
 class FarcasterIndexer {
   private hubClient: HubClient;
-  private workers: any[] = [];
-  private monitoringServer: any;
+  private workers: Worker[] = [];
 
   constructor() {
     this.hubClient = new HubClient(config.hubs);
@@ -73,11 +73,11 @@ class FarcasterIndexer {
         console.error(`Worker ${index} error:`, error);
       });
 
-      worker.on("failed", (job: any, error: Error) => {
-        console.error(`Job ${job.id} failed:`, error);
+      worker.on("failed", (job: Job | undefined, error: Error) => {
+        console.error(`Job ${job?.id || "unknown"} failed:`, error);
       });
 
-      worker.on("completed", (job: any) => {
+      worker.on("completed", (job: Job) => {
         console.log(`Job ${job.id} completed successfully`);
       });
     });
@@ -103,11 +103,8 @@ class FarcasterIndexer {
       console.log("All workers stopped");
     }
 
-    // Stop monitoring server
-    if (this.monitoringServer) {
-      this.monitoringServer.close();
-      console.log("Monitoring server stopped");
-    }
+    // Note: Monitoring server is not actually implemented yet
+    // If it were, we would close it here
 
     // Shutdown queue system
     await shutdown();

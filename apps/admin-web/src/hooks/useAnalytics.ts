@@ -41,7 +41,38 @@ export const useAnalytics = (timeRange: "7d" | "30d" | "90d" = "30d") => {
       // Note: This would typically call a dedicated analytics endpoint
       // For now, we'll use the health stats endpoint and simulate analytics data
       const response = await api.admin.health.stats();
-      const data = response as any;
+      const data = response as {
+        targets?: { total?: number };
+        stats?: {
+          totalCasts?: number;
+          totalReactions?: number;
+          totalLinks?: number;
+          avgCastsPerTarget?: number;
+          avgReactionsPerCast?: number;
+        };
+        growth?: {
+          newTargetsToday?: number;
+          newTargetsThisWeek?: number;
+          newTargetsThisMonth?: number;
+          castsToday?: number;
+          castsThisWeek?: number;
+          castsThisMonth?: number;
+        };
+        topTargets?: Array<{
+          fid: number;
+          displayName?: string;
+          username?: string;
+          castCount: number;
+          reactionCount: number;
+          followerCount?: number;
+        }>;
+        recentActivity?: Array<{
+          date: string;
+          newTargets: number;
+          totalCasts: number;
+          totalReactions: number;
+        }>;
+      };
 
       return {
         overview: {

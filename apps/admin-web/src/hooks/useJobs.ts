@@ -20,18 +20,30 @@ export const useJobs = (autoRefresh = false) => {
   return useQuery({
     queryKey: ["jobs"],
     queryFn: async (): Promise<JobsResponse> => {
-      const response = (await api.admin.jobs.list()) as any;
+      const response = (await api.admin.jobs.list()) as {
+        jobs?: Record<
+          string,
+          {
+            active?: number;
+            waiting?: number;
+            completed?: number;
+            failed?: number;
+            delayed?: number;
+            paused?: boolean;
+          }
+        >;
+      };
 
       // Transform the API response to match expected structure
       const queues = Object.entries(response.jobs || {}).map(
-        ([name, stats]: [string, any]) => ({
+        ([name, stats]) => ({
           name,
           active: stats.active || 0,
           waiting: stats.waiting || 0,
           completed: stats.completed || 0,
           failed: stats.failed || 0,
           delayed: stats.delayed || 0,
-          paused: stats.paused || 0,
+          paused: stats.paused || false,
         })
       );
 
@@ -48,18 +60,33 @@ export const useJobStats = () => {
   return useQuery({
     queryKey: ["job-stats"],
     queryFn: async (): Promise<JobStatsResponse> => {
-      const response = (await api.admin.jobs.list()) as any;
+      const response = (await api.admin.jobs.list()) as {
+        jobs?: Record<
+          string,
+          {
+            active?: number;
+            waiting?: number;
+            completed?: number;
+            failed?: number;
+          }
+        >;
+      };
 
       // Calculate totals from all queues
       const jobsData = response.jobs || {};
       const totals = Object.values(jobsData).reduce(
-        (acc: any, queue: any) => ({
+        (acc, queue) => ({
           active: acc.active + (queue.active || 0),
           waiting: acc.waiting + (queue.waiting || 0),
           completed: acc.completed + (queue.completed || 0),
           failed: acc.failed + (queue.failed || 0),
         }),
-        { active: 0, waiting: 0, completed: 0, failed: 0 }
+        { active: 0, waiting: 0, completed: 0, failed: 0 } as {
+          active: number;
+          waiting: number;
+          completed: number;
+          failed: number;
+        }
       );
 
       return {

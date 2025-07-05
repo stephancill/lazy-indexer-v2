@@ -11,10 +11,10 @@ describe("Worker Logic Unit Tests", () => {
         USERNAME: "username",
       };
 
-      expect(userDataTypes["PFP"]).toBe("pfpUrl");
-      expect(userDataTypes["DISPLAY"]).toBe("displayName");
-      expect(userDataTypes["BIO"]).toBe("bio");
-      expect(userDataTypes["USERNAME"]).toBe("username");
+      expect(userDataTypes.PFP).toBe("pfpUrl");
+      expect(userDataTypes.DISPLAY).toBe("displayName");
+      expect(userDataTypes.BIO).toBe("bio");
+      expect(userDataTypes.USERNAME).toBe("username");
     });
 
     it("should handle reaction type mapping correctly", () => {

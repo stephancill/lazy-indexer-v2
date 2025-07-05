@@ -58,11 +58,11 @@ const REDIS_POOL_CONFIG = {
 function getRedisConfig() {
   if (isProduction()) {
     return REDIS_POOL_CONFIG.PRODUCTION;
-  } else if (isTest()) {
-    return REDIS_POOL_CONFIG.TEST;
-  } else {
-    return REDIS_POOL_CONFIG.DEVELOPMENT;
   }
+  if (isTest()) {
+    return REDIS_POOL_CONFIG.TEST;
+  }
+  return REDIS_POOL_CONFIG.DEVELOPMENT;
 }
 
 /**
@@ -189,7 +189,7 @@ export class RedisCache {
   /**
    * Get cached value with automatic JSON parsing
    */
-  async get<T = any>(key: string): Promise<T | null> {
+  async get<T = unknown>(key: string): Promise<T | null> {
     try {
       const value = await this.client.get(key);
       if (value === null) return null;
@@ -209,7 +209,11 @@ export class RedisCache {
   /**
    * Set cached value with automatic JSON serialization
    */
-  async set<T = any>(key: string, value: T, ttl?: number): Promise<boolean> {
+  async set<T = unknown>(
+    key: string,
+    value: T,
+    ttl?: number
+  ): Promise<boolean> {
     try {
       const serialized =
         typeof value === "string" ? value : JSON.stringify(value);
@@ -269,7 +273,7 @@ export class RedisCache {
   /**
    * Get multiple keys at once
    */
-  async mget<T = any>(keys: string[]): Promise<(T | null)[]> {
+  async mget<T = unknown>(keys: string[]): Promise<(T | null)[]> {
     try {
       const values = await this.client.mget(...keys);
       return values.map((value) => {
@@ -289,7 +293,7 @@ export class RedisCache {
   /**
    * Set multiple key-value pairs
    */
-  async mset<T = any>(
+  async mset<T = unknown>(
     pairs: Array<[string, T]>,
     ttl?: number
   ): Promise<boolean> {
@@ -312,7 +316,7 @@ export class RedisCache {
 
       return true;
     } catch (error) {
-      console.warn(`Cache mset failed:`, error);
+      console.warn("Cache mset failed:", error);
       return false;
     }
   }
@@ -324,9 +328,8 @@ export class RedisCache {
     try {
       if (by === 1) {
         return await this.client.incr(key);
-      } else {
-        return await this.client.incrby(key, by);
       }
+      return await this.client.incrby(key, by);
     } catch (error) {
       console.warn(`Cache incr failed for key ${key}:`, error);
       return 0;
@@ -463,7 +466,7 @@ export class TargetSetManager {
   async getAllTargets(): Promise<number[]> {
     try {
       const members = await redis.smembers(CacheKeys.TARGET_SET);
-      return members.map(Number).filter((n) => !isNaN(n));
+      return members.map(Number).filter((n) => !Number.isNaN(n));
     } catch (error) {
       console.warn("Failed to get all targets:", error);
       return [];

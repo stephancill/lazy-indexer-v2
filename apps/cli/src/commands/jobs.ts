@@ -104,7 +104,7 @@ export const jobCommands = new Command("jobs")
           if (options.json) {
             logger.json(queueStats);
           } else {
-            queueStats.forEach((stat) => {
+            for (const stat of queueStats) {
               logger.info(`Queue: ${stat.queue}`);
               logger.info(`  Waiting: ${stat.waiting}`);
               logger.info(`  Active: ${stat.active}`);
@@ -113,7 +113,7 @@ export const jobCommands = new Command("jobs")
               logger.info(`  Delayed: ${stat.delayed}`);
               logger.info(`  Paused: ${stat.paused ? "Yes" : "No"}`);
               logger.line();
-            });
+            }
 
             const totals = queueStats.reduce(
               (acc, stat) => ({
