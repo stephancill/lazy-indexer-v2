@@ -143,6 +143,12 @@ export const api = {
       stats: () => apiClient.get("/api/admin/stats"),
       realtime: () => apiClient.get("/api/admin/stats/realtime"),
     },
+
+    // Analytics
+    analytics: (timeRange?: string) => {
+      const params = timeRange ? `?timeRange=${timeRange}` : "";
+      return apiClient.get(`/api/admin/analytics${params}`);
+    },
   },
 
   // Public endpoints

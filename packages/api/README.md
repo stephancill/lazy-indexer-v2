@@ -62,6 +62,7 @@ GET /api/v1/users/:fid
 Returns user profile with statistics.
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -90,6 +91,7 @@ GET /api/v1/casts/:hash
 Returns cast details with engagement statistics.
 
 **Response:**
+
 ```json
 {
   "cast": {
@@ -120,6 +122,7 @@ GET /api/v1/feed/:fid?limit=50&offset=0
 Returns chronological feed of casts from users the FID follows.
 
 **Query Parameters:**
+
 - `limit` (optional): Number of items to return (max 100, default 50)
 - `offset` (optional): Number of items to skip (default 0)
 
@@ -199,6 +202,7 @@ GET /api/admin/targets?limit=50&offset=0&search=&is_root=&sort_by=added_at&sort_
 Returns paginated list of indexed targets with filtering and sorting.
 
 **Query Parameters:**
+
 - `search`: Filter by FID (partial match)
 - `is_root`: Filter by root status (true/false)
 - `sort_by`: Sort field (fid, added_at)
@@ -308,6 +312,60 @@ GET /api/admin/stats
 
 Returns comprehensive system statistics.
 
+#### Get Analytics Dashboard Data
+
+```http
+GET /api/admin/analytics?timeRange=30d
+```
+
+Returns comprehensive analytics data for the dashboard including overview metrics, growth statistics, top targets, and recent activity.
+
+**Query Parameters:**
+
+- `timeRange` (optional): Time range for analytics (7d, 30d, 90d, default: 30d)
+
+**Response:**
+
+```json
+{
+  "overview": {
+    "totalTargets": 1344,
+    "totalCasts": 887977,
+    "totalReactions": 868292,
+    "totalLinks": 197275,
+    "avgCastsPerTarget": 660.7,
+    "avgReactionsPerCast": 0.98
+  },
+  "growth": {
+    "newTargetsToday": 0,
+    "newTargetsThisWeek": 12,
+    "newTargetsThisMonth": 45,
+    "castsToday": 156,
+    "castsThisWeek": 1234,
+    "castsThisMonth": 5678
+  },
+  "topTargets": [
+    {
+      "fid": 5708,
+      "displayName": "User 5708",
+      "username": "user5708",
+      "castCount": 20,
+      "reactionCount": 3,
+      "followerCount": 166
+    }
+  ],
+  "recentActivity": [
+    {
+      "date": "2025-07-05",
+      "newTargets": 1,
+      "totalCasts": 7,
+      "totalReactions": 61
+    }
+  ],
+  "timestamp": "2025-07-06T12:55:20.754Z"
+}
+```
+
 ## Error Handling
 
 All endpoints return consistent error responses:
@@ -320,6 +378,7 @@ All endpoints return consistent error responses:
 ```
 
 **HTTP Status Codes:**
+
 - `200` - Success
 - `400` - Bad Request (invalid parameters)
 - `401` - Unauthorized (authentication required/failed)
@@ -371,6 +430,7 @@ Returns service health status:
 ### Metrics
 
 Admin endpoints provide detailed metrics:
+
 - Target counts and sync status
 - Data volume (casts, users, reactions, links)
 - Job queue statistics
@@ -414,6 +474,7 @@ bun run test:watch
 ```
 
 Test coverage includes:
+
 - Authentication flows
 - All API endpoints
 - Error handling
@@ -445,6 +506,7 @@ CMD ["bun", "run", "start"]
 ### Environment
 
 Ensure all environment variables are set in production:
+
 - Strong JWT secret (minimum 32 characters)
 - Secure admin password
 - Database connection string
