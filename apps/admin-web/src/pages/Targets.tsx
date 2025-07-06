@@ -47,6 +47,7 @@ const Targets: React.FC = () => {
 
   const targets = data?.targets || [];
   const totalPages = data?.totalPages || 1;
+  const totalCount = data?.total || 0;
 
   const handleBackfill = (fid: number) => {
     backfillTargetMutation.mutate(fid);
@@ -152,7 +153,7 @@ const Targets: React.FC = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Targets ({targets.length})</CardTitle>
+            <CardTitle>Targets ({totalCount})</CardTitle>
             <Button
               variant="outline"
               onClick={() => refetch()}
