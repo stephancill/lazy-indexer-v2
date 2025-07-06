@@ -1,4 +1,9 @@
-import { db, type HubClient, schema } from "@farcaster-indexer/shared";
+import {
+  db,
+  type HubClient,
+  schema,
+  parseMessageFromJson,
+} from "@farcaster-indexer/shared";
 import { eq, and } from "drizzle-orm";
 import type { RealtimeSyncJob } from "../queue.js";
 import {
@@ -9,6 +14,7 @@ import {
   scheduleEventProcessing,
 } from "../queue.js";
 import type { FarcasterHttpEvent } from "@farcaster-indexer/shared";
+import { MessageType } from "@farcaster/core";
 
 export class RealtimeWorker {
   private hubClient: HubClient;
@@ -103,10 +109,12 @@ export class RealtimeWorker {
   private async shouldProcessMergeMessage(
     event: FarcasterHttpEvent
   ): Promise<boolean> {
-    const message = event.mergeMessageBody?.message;
-    if (!message) return false;
+    const httpMessage = event.mergeMessageBody?.message;
+    if (!httpMessage) return false;
 
-    const messageFid = message.data.fid;
+    const message = parseMessageFromJson(httpMessage);
+    const messageFid = message.data?.fid;
+    if (!messageFid) return false;
 
     // Check if the message is from a target
     if (await isTargetInSet(messageFid)) {
@@ -115,7 +123,7 @@ export class RealtimeWorker {
 
     // Check if it's a cast reply to a target
     if (
-      message.data.type === "MESSAGE_TYPE_CAST_ADD" &&
+      message.data?.type === MessageType.CAST_ADD &&
       message.data.castAddBody?.parentCastId
     ) {
       const parentFid = message.data.castAddBody.parentCastId.fid;
@@ -126,7 +134,7 @@ export class RealtimeWorker {
 
     // Check if it's a reaction to a target's cast
     if (
-      message.data.type === "MESSAGE_TYPE_REACTION_ADD" &&
+      message.data?.type === MessageType.REACTION_ADD &&
       message.data.reactionBody?.targetCastId
     ) {
       const targetFid = message.data.reactionBody.targetCastId.fid;
@@ -136,12 +144,9 @@ export class RealtimeWorker {
     }
 
     // Check if it's a follow/unfollow of a target
-    if (
-      message.data.type === "MESSAGE_TYPE_LINK_ADD" &&
-      message.data.linkBody
-    ) {
+    if (message.data?.type === MessageType.LINK_ADD && message.data.linkBody) {
       const targetFid = message.data.linkBody.targetFid;
-      if (await isTargetInSet(targetFid)) {
+      if (targetFid && (await isTargetInSet(targetFid))) {
         return true;
       }
     }
@@ -214,17 +219,18 @@ export class RealtimeWorker {
   private async handleMergeMessageExpansion(
     event: FarcasterHttpEvent
   ): Promise<void> {
-    const message = event.mergeMessageBody?.message;
-    if (!message) return;
+    const httpMessage = event.mergeMessageBody?.message;
+    if (!httpMessage) return;
+
+    const message = parseMessageFromJson(httpMessage);
 
     // Handle follow/unfollow events from root targets
-    if (
-      message.data.type === "MESSAGE_TYPE_LINK_ADD" &&
-      message.data.linkBody
-    ) {
+    if (message.data?.type === MessageType.LINK_ADD && message.data.linkBody) {
       const followerFid = message.data.fid;
       const targetFid = message.data.linkBody.targetFid;
       const linkType = message.data.linkBody.type;
+
+      if (!followerFid || !targetFid) return;
 
       // Check if this is a follow from a root target
       const rootTarget = await db

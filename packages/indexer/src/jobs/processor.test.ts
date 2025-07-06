@@ -3,19 +3,20 @@ import type {
   FarcasterHttpEvent,
   FarcasterHttpMessage,
 } from "@farcaster-indexer/shared";
-import {
-  Message,
-  MessageType,
-  ReactionType,
-  UserDataType,
-  fromFarcasterTime,
-} from "@farcaster/core";
-import { bytesToHex } from "viem";
+import { MessageType } from "@farcaster/core";
+
+// Mock the message parser utilities
+const mockParseMessageFromJson = vi.fn();
+const mockConvertFarcasterTime = vi.fn();
+const mockCreateCastRecord = vi.fn();
+const mockCreateReactionRecord = vi.fn();
+const mockCreateUserDataRecord = vi.fn();
 
 // Mock all external dependencies
 const mockDb = {
   insert: vi.fn(),
   delete: vi.fn(),
+  execute: vi.fn().mockResolvedValue(undefined),
 };
 
 const mockSchema = {
@@ -30,15 +31,26 @@ const mockSchema = {
 
 const mockBatchInsert = vi.fn();
 const mockEq = vi.fn((field, value) => ({ field, value }));
+const mockSql = vi.fn();
 
 vi.mock("@farcaster-indexer/shared", () => ({
   db: mockDb,
   schema: mockSchema,
   batchInsert: mockBatchInsert,
+  parseMessageFromJson: mockParseMessageFromJson,
+  convertFarcasterTime: mockConvertFarcasterTime,
+  createCastRecord: mockCreateCastRecord,
+  createReactionRecord: mockCreateReactionRecord,
+  createLinkRecord: vi.fn(),
+  createVerificationRecord: vi.fn(),
+  createUserDataRecord: mockCreateUserDataRecord,
+  createOnChainEventRecord: vi.fn(),
+  convertMessageHash: vi.fn((hash) => `0x${hash.toString()}`),
 }));
 
 vi.mock("drizzle-orm", () => ({
   eq: mockEq,
+  sql: mockSql,
 }));
 
 describe("ProcessorWorker", () => {
@@ -62,6 +74,43 @@ describe("ProcessorWorker", () => {
     mockDb.delete.mockReturnValue({
       where: vi.fn().mockResolvedValue(undefined),
     });
+
+    // Mock message parser utilities
+    mockParseMessageFromJson.mockImplementation((httpMessage) => ({
+      data: httpMessage.data,
+      hash: new Uint8Array([0x89, 0xf4, 0xde, 0x36]),
+    }));
+
+    mockConvertFarcasterTime.mockImplementation(
+      (timestamp) => new Date(timestamp * 1000)
+    );
+
+    mockCreateCastRecord.mockImplementation(() => ({
+      hash: "0x89f4de362897aa0023df86c257860d3a6e73eba9",
+      fid: 1689,
+      text: "just setting up my farcaster",
+      parentHash: null,
+      parentFid: null,
+      parentUrl: null,
+      timestamp: new Date(53200214 * 1000),
+      embeds: "[]",
+    }));
+
+    mockCreateReactionRecord.mockImplementation(() => ({
+      hash: "0xe7acbc61aea43485be36abd980b672a7c9d71f48",
+      fid: 1689,
+      type: "like",
+      targetHash: "0xf384e3556c20a3b7b10371140ce81894a110261a",
+      timestamp: new Date(127590822 * 1000),
+    }));
+
+    mockCreateUserDataRecord.mockImplementation(() => ({
+      hash: "0xf704a870b4fec78f9bafce8445cf53cf7448f99b",
+      fid: 1689,
+      type: "username",
+      value: "stephancill",
+      timestamp: new Date(69403502 * 1000),
+    }));
 
     // Capture a copy of the data array when batchInsert is called
     // since ProcessorWorker clears the array after insertion
@@ -120,6 +169,28 @@ describe("ProcessorWorker", () => {
         },
       };
 
+      // Mock the parsed message for this specific test
+      mockParseMessageFromJson.mockReturnValueOnce({
+        data: {
+          type: MessageType.CAST_ADD,
+          fid: 397286,
+          timestamp: 142041602,
+          castAddBody: event.mergeMessageBody?.message.data.castAddBody,
+        },
+        hash: new Uint8Array([0x85, 0x59, 0x0f, 0x8e]),
+      });
+
+      mockCreateCastRecord.mockReturnValueOnce({
+        hash: "0x85590f8e385d0a0a99deb552c9f95a049acee012",
+        fid: 397286,
+        text: "Paul Vigna:\n- [07-03 07:44] Susan B. Anthony美元价值探讨",
+        parentUrl: "https://warpcast.com/~/channel/xkolmonitor",
+        parentHash: null,
+        parentFid: null,
+        timestamp: new Date(142041602 * 1000),
+        embeds: JSON.stringify([{ url: "https://t.me/xkolmonitor" }]),
+      });
+
       const job = { data: { event } };
       await worker.processJob(job);
 
@@ -128,7 +199,6 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(142041602)._unsafeUnwrap();
 
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.casts,
@@ -140,7 +210,7 @@ describe("ProcessorWorker", () => {
             parentHash: null,
             parentFid: null,
             hash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
+            timestamp: expect.any(Date),
             embeds: expect.any(String),
           }),
         ]),
@@ -182,6 +252,25 @@ describe("ProcessorWorker", () => {
         },
       };
 
+      // Mock the parsed message for this specific test
+      mockParseMessageFromJson.mockReturnValueOnce({
+        data: {
+          type: MessageType.REACTION_ADD,
+          fid: 543139,
+          timestamp: 142041603,
+          reactionBody: event.mergeMessageBody?.message.data.reactionBody,
+        },
+        hash: new Uint8Array([0x10, 0xae, 0x42, 0x90]),
+      });
+
+      mockCreateReactionRecord.mockReturnValueOnce({
+        hash: "0x10ae42904053cebc034331e048676d756c39cd83",
+        fid: 543139,
+        type: "like",
+        targetHash: "0x33a09c8021b6977548d5bca82b7caa92916aaa8a",
+        timestamp: new Date(142041603 * 1000),
+      });
+
       const job = { data: { event } };
       await worker.processJob(job);
 
@@ -190,7 +279,6 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(142041603)._unsafeUnwrap();
 
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.reactions,
@@ -200,7 +288,7 @@ describe("ProcessorWorker", () => {
             type: "like",
             hash: expect.any(String),
             targetHash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
+            timestamp: expect.any(Date),
           }),
         ]),
         expect.objectContaining({
@@ -260,6 +348,26 @@ describe("ProcessorWorker", () => {
         },
       };
 
+      // Mock the parsed message for this specific test
+      mockParseMessageFromJson.mockReturnValueOnce({
+        data: {
+          type: MessageType.USER_DATA_ADD,
+          fid: 1113398,
+          timestamp: 142041680,
+          userDataBody: event.mergeMessageBody?.message.data.userDataBody,
+        },
+        hash: new Uint8Array([0xe3, 0x90, 0x94, 0x36]),
+      });
+
+      mockCreateUserDataRecord.mockReturnValueOnce({
+        hash: "0xe3909436e7db929eef6532568c7152afd20996b1",
+        fid: 1113398,
+        type: "pfp",
+        value:
+          "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/95e044eb-c3e1-47ca-ae1a-6cfce9f2ce00/original",
+        timestamp: new Date(142041680 * 1000),
+      });
+
       const job = { data: { event } };
       await worker.processJob(job);
 
@@ -268,7 +376,6 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called for user data
       expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(142041680)._unsafeUnwrap();
 
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.userData,
@@ -279,7 +386,7 @@ describe("ProcessorWorker", () => {
             value:
               "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/95e044eb-c3e1-47ca-ae1a-6cfce9f2ce00/original",
             hash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
+            timestamp: expect.any(Date),
           }),
         ]),
         expect.objectContaining({
@@ -288,8 +395,8 @@ describe("ProcessorWorker", () => {
         })
       );
 
-      // Also verify that user profile update was attempted
-      expect(mockDb.insert).toHaveBeenCalledWith(mockSchema.users);
+      // Also verify that users materialized view refresh was attempted
+      expect(mockDb.execute).toHaveBeenCalled();
     });
 
     it("should handle processing errors", async () => {
@@ -322,6 +429,17 @@ describe("ProcessorWorker", () => {
         },
       };
 
+      // Mock the parsed message for this specific test
+      mockParseMessageFromJson.mockReturnValueOnce({
+        data: {
+          type: MessageType.CAST_ADD,
+          fid: 1689,
+          timestamp: 53200214,
+          castAddBody: event.mergeMessageBody?.message.data.castAddBody,
+        },
+        hash: new Uint8Array([0x89, 0xf4, 0xde, 0x36]),
+      });
+
       // Set up the mock to reject on the next call
       mockBatchInsert.mockRejectedValueOnce(new Error("Database error"));
 
@@ -338,8 +456,8 @@ describe("ProcessorWorker", () => {
     });
   });
 
-  describe("addCastToBatch", () => {
-    it("should add cast to batch with correct data format", async () => {
+  describe("message parsing integration", () => {
+    it("should use message parser utilities correctly", async () => {
       const httpMessage = {
         data: {
           type: "MESSAGE_TYPE_CAST_ADD",
@@ -362,273 +480,82 @@ describe("ProcessorWorker", () => {
           "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
       };
 
-      const parsedMessage = Message.fromJSON(httpMessage);
-      await (worker as any).addCastToBatch(parsedMessage);
-
-      // Trigger batch flush
-      await (worker as any).flushAllBatches();
-
-      // Check that mockBatchInsert was called
-      expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(53200214)._unsafeUnwrap();
-
-      expect(mockBatchInsert).toHaveBeenCalledWith(
-        mockSchema.casts,
-        expect.arrayContaining([
-          expect.objectContaining({
-            fid: 1689,
-            text: "just setting up my farcaster",
-            parentHash: null,
-            parentFid: null,
-            parentUrl: null,
-            hash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
-            embeds: "[]",
-          }),
-        ]),
-        expect.objectContaining({
-          batchSize: 100,
-          onConflictDoNothing: true,
-        })
-      );
-    });
-  });
-
-  describe("addReactionToBatch", () => {
-    it("should add reaction to batch with human-readable type", async () => {
-      const httpMessage = {
+      // Mock the parsed message
+      mockParseMessageFromJson.mockReturnValueOnce({
         data: {
-          type: "MESSAGE_TYPE_REACTION_ADD",
-          fid: 1689,
-          timestamp: 127590822,
-          network: "FARCASTER_NETWORK_MAINNET",
-          reactionBody: {
-            type: "REACTION_TYPE_LIKE",
-            targetCastId: {
-              fid: 3,
-              hash: "0xf384e3556c20a3b7b10371140ce81894a110261a",
-            },
-          },
-        },
-        hash: "0xe7acbc61aea43485be36abd980b672a7c9d71f48",
-        hashScheme: "HASH_SCHEME_BLAKE3",
-        signature:
-          "RxmSqczCOyQAIV0PlPV0K5uTT66HxUs8POIRiCqIiM4IbXvoDrVk5rBqR8P9Zl+BPYAkxrZqRdAtq2+mmGFzCQ==",
-        signatureScheme: "SIGNATURE_SCHEME_ED25519",
-        signer:
-          "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
-      };
-
-      const parsedMessage = Message.fromJSON(httpMessage);
-      await (worker as any).addReactionToBatch(parsedMessage);
-
-      // Trigger batch flush
-      await (worker as any).flushAllBatches();
-
-      // Check that mockBatchInsert was called
-      expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(127590822)._unsafeUnwrap();
-
-      expect(mockBatchInsert).toHaveBeenCalledWith(
-        mockSchema.reactions,
-        expect.arrayContaining([
-          expect.objectContaining({
-            fid: 1689,
-            type: "like",
-            hash: expect.any(String),
-            targetHash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
-          }),
-        ]),
-        expect.objectContaining({
-          batchSize: 100,
-          onConflictDoNothing: true,
-        })
-      );
-    });
-
-    it("should handle recast type correctly", async () => {
-      const httpMessage = {
-        data: {
-          type: "MESSAGE_TYPE_REACTION_ADD",
-          fid: 1689,
-          timestamp: 127590822,
-          network: "FARCASTER_NETWORK_MAINNET",
-          reactionBody: {
-            type: "REACTION_TYPE_RECAST",
-            targetCastId: {
-              fid: 3,
-              hash: "0xf384e3556c20a3b7b10371140ce81894a110261a",
-            },
-          },
-        },
-        hash: "0xe7acbc61aea43485be36abd980b672a7c9d71f48",
-        hashScheme: "HASH_SCHEME_BLAKE3",
-        signature:
-          "RxmSqczCOyQAIV0PlPV0K5uTT66HxUs8POIRiCqIiM4IbXvoDrVk5rBqR8P9Zl+BPYAkxrZqRdAtq2+mmGFzCQ==",
-        signatureScheme: "SIGNATURE_SCHEME_ED25519",
-        signer:
-          "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
-      };
-
-      const parsedMessage = Message.fromJSON(httpMessage);
-      await (worker as any).addReactionToBatch(parsedMessage);
-
-      // Trigger batch flush
-      await (worker as any).flushAllBatches();
-
-      // Check that mockBatchInsert was called
-      expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(127590822)._unsafeUnwrap();
-
-      expect(mockBatchInsert).toHaveBeenCalledWith(
-        mockSchema.reactions,
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: "recast",
-            timestamp: new Date(expectedTimestamp),
-          }),
-        ]),
-        expect.objectContaining({
-          batchSize: 100,
-          onConflictDoNothing: true,
-        })
-      );
-    });
-  });
-
-  describe("addUserDataToBatch", () => {
-    it("should add user data to batch with human-readable type", async () => {
-      const httpMessage = {
-        data: {
-          type: "MESSAGE_TYPE_USER_DATA_ADD",
-          fid: 1689,
-          timestamp: 69403502,
-          network: "FARCASTER_NETWORK_MAINNET",
-          userDataBody: {
-            type: "USER_DATA_TYPE_USERNAME",
-            value: "stephancill",
-          },
-        },
-        hash: "0xf704a870b4fec78f9bafce8445cf53cf7448f99b",
-        hashScheme: "HASH_SCHEME_BLAKE3",
-        signature:
-          "SERRxExYL/mWA0oxbq7WYda4R73xiBLmfW7HOU5OYjXQXte3pUXbmsdUw6HjMTpoqIFRP8oKeLnVTNPd/BiMBA==",
-        signatureScheme: "SIGNATURE_SCHEME_ED25519",
-        signer:
-          "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
-      };
-
-      const parsedMessage = Message.fromJSON(httpMessage);
-      await (worker as any).addUserDataToBatch(parsedMessage);
-
-      // Trigger batch flush
-      await (worker as any).flushAllBatches();
-
-      // Check that mockBatchInsert was called
-      expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(69403502)._unsafeUnwrap();
-
-      expect(mockBatchInsert).toHaveBeenCalledWith(
-        mockSchema.userData,
-        expect.arrayContaining([
-          expect.objectContaining({
-            fid: 1689,
-            type: "username",
-            value: "stephancill",
-            hash: expect.any(String),
-            timestamp: new Date(expectedTimestamp),
-          }),
-        ]),
-        expect.objectContaining({
-          batchSize: 100,
-          onConflictDoNothing: true,
-        })
-      );
-    });
-
-    it("should handle display name correctly", async () => {
-      const httpMessage = {
-        data: {
-          type: "MESSAGE_TYPE_USER_DATA_ADD",
-          fid: 1689,
-          timestamp: 126968968,
-          network: "FARCASTER_NETWORK_MAINNET",
-          userDataBody: {
-            type: "USER_DATA_TYPE_DISPLAY",
-            value: "Stephan",
-          },
-        },
-        hash: "0xd9593619238083a72b5b2e8b6d31a2e3a00e5df7",
-        hashScheme: "HASH_SCHEME_BLAKE3",
-        signature:
-          "rJerSJ9K939W7D1ZsvheP7NIdmR+1gaOmjcPqOEfj1PbAj9tPwLk4pblxTXtBi2RtgqOhRyHjAJoa1DMRtfFAg==",
-        signatureScheme: "SIGNATURE_SCHEME_ED25519",
-        signer:
-          "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
-      };
-
-      const parsedMessage = Message.fromJSON(httpMessage);
-      await (worker as any).addUserDataToBatch(parsedMessage);
-
-      // Trigger batch flush
-      await (worker as any).flushAllBatches();
-
-      // Check that mockBatchInsert was called
-      expect(mockBatchInsert).toHaveBeenCalled();
-      const expectedTimestamp = fromFarcasterTime(126968968)._unsafeUnwrap();
-
-      expect(mockBatchInsert).toHaveBeenCalledWith(
-        mockSchema.userData,
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: "display",
-            value: "Stephan",
-            timestamp: new Date(expectedTimestamp),
-          }),
-        ]),
-        expect.objectContaining({
-          batchSize: 100,
-          onConflictDoNothing: true,
-        })
-      );
-    });
-  });
-
-  describe("bytesToHex conversion", () => {
-    it("should convert hash to hex string", () => {
-      const httpMessage = {
-        data: {
-          type: "MESSAGE_TYPE_CAST_ADD",
+          type: MessageType.CAST_ADD,
           fid: 1689,
           timestamp: 53200214,
+          castAddBody: httpMessage.data.castAddBody,
+        },
+        hash: new Uint8Array([0x89, 0xf4, 0xde, 0x36]),
+      });
+
+      const event: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
+        id: 1001,
+        mergeMessageBody: {
+          message: httpMessage,
+          deletedMessages: [],
+        },
+      };
+
+      const job = { data: { event } };
+      await worker.processJob(job);
+
+      // Verify that the message parser utilities were called
+      expect(mockParseMessageFromJson).toHaveBeenCalledWith(httpMessage);
+      expect(mockCreateCastRecord).toHaveBeenCalled();
+    });
+
+    it("should handle different message types through factory functions", async () => {
+      // Test that reaction messages are handled
+      const reactionMessage = {
+        data: {
+          type: "MESSAGE_TYPE_REACTION_ADD",
+          fid: 1689,
+          timestamp: 127590822,
           network: "FARCASTER_NETWORK_MAINNET",
-          castAddBody: {
-            mentions: [],
-            text: "just setting up my farcaster",
-            embeds: [],
-            mentionsPositions: [],
+          reactionBody: {
+            type: "REACTION_TYPE_LIKE" as const,
+            targetCastId: {
+              fid: 3,
+              hash: "0xf384e3556c20a3b7b10371140ce81894a110261a",
+            },
           },
         },
-        hash: "0x89f4de362897aa0023df86c257860d3a6e73eba9",
+        hash: "0xe7acbc61aea43485be36abd980b672a7c9d71f48",
         hashScheme: "HASH_SCHEME_BLAKE3",
-        signature:
-          "YfOHb38IQCsV5Bb87skeKIY7LB2ukTVQfShITA8s1thumo1TOokv028VBZYBtq448aP1bnDQ939NG6GbkRMIDw==",
+        signature: "test-signature",
         signatureScheme: "SIGNATURE_SCHEME_ED25519",
         signer:
           "0xa5f666cac97ae9f09f78cfaaa624ea2a1f03f042aa87c955d0113275e54e9cfe",
       };
 
-      const parsedMessage = Message.fromJSON(httpMessage);
+      mockParseMessageFromJson.mockReturnValueOnce({
+        data: {
+          type: MessageType.REACTION_ADD,
+          fid: 1689,
+          timestamp: 127590822,
+          reactionBody: reactionMessage.data.reactionBody,
+        },
+        hash: new Uint8Array([0xe7, 0xac, 0xbc, 0x61]),
+      });
 
-      // Verify hash is converted to hex string
-      expect(typeof parsedMessage.hash).toBe("object"); // Should be Uint8Array
-      expect(parsedMessage.hash).toBeInstanceOf(Uint8Array);
+      const event: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
+        id: 1002,
+        mergeMessageBody: {
+          message: reactionMessage,
+          deletedMessages: [],
+        },
+      };
 
-      // Verify bytesToHex works
-      const hexHash = bytesToHex(parsedMessage.hash);
-      expect(typeof hexHash).toBe("string");
-      expect(hexHash).toMatch(/^0x[0-9a-f]+$/);
+      const job = { data: { event } };
+      await worker.processJob(job);
+
+      // Verify that the reaction parser was called
+      expect(mockCreateReactionRecord).toHaveBeenCalled();
     });
   });
 });

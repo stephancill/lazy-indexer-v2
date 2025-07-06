@@ -3,6 +3,12 @@ import {
   db,
   schema,
   batchInsert,
+  createCastRecordFromApiMessage,
+  createReactionRecordFromApiMessage,
+  createLinkRecordFromApiMessage,
+  createVerificationRecordFromApiMessage,
+  createUserDataRecordFromApiMessage,
+  createOnChainEventRecord,
 } from "@farcaster-indexer/shared";
 import type {
   CastMessage,
@@ -64,13 +70,9 @@ export class BackfillWorker {
       }
 
       // Store individual user data messages (users table is now a materialized view)
-      const userDataRecords = userDataMessages.map((message) => ({
-        hash: message.hash,
-        fid: message.data.fid,
-        type: message.data.userDataBody?.type || "UNKNOWN",
-        value: message.data.userDataBody?.value || "",
-        timestamp: new Date(message.data.timestamp * 1000),
-      }));
+      const userDataRecords = userDataMessages.map((message) =>
+        createUserDataRecordFromApiMessage(message)
+      );
 
       if (userDataRecords.length > 0) {
         await batchInsert(schema.userData, userDataRecords, {
@@ -100,18 +102,9 @@ export class BackfillWorker {
         return;
       }
 
-      const castRecords = castMessages.map((message) => ({
-        hash: message.hash,
-        fid: message.data.fid,
-        text: message.data.castAddBody?.text || "",
-        parentHash: message.data.castAddBody?.parentCastId?.hash || null,
-        parentFid: message.data.castAddBody?.parentCastId?.fid || null,
-        parentUrl: message.data.castAddBody?.parentUrl || null,
-        timestamp: new Date(message.data.timestamp * 1000),
-        embeds: message.data.castAddBody?.embeds
-          ? JSON.stringify(message.data.castAddBody.embeds)
-          : null,
-      }));
+      const castRecords = castMessages.map((message) =>
+        createCastRecordFromApiMessage(message)
+      );
 
       if (castRecords.length > 0) {
         await batchInsert(schema.casts, castRecords, {
@@ -136,16 +129,9 @@ export class BackfillWorker {
         return;
       }
 
-      const reactionRecords = reactionMessages.map((message) => ({
-        hash: message.hash,
-        fid: message.data.fid,
-        type:
-          message.data.reactionBody?.type === "REACTION_TYPE_LIKE"
-            ? ("like" as const)
-            : ("recast" as const),
-        targetHash: message.data.reactionBody?.targetCastId?.hash || "",
-        timestamp: new Date(message.data.timestamp * 1000),
-      }));
+      const reactionRecords = reactionMessages.map((message) =>
+        createReactionRecordFromApiMessage(message)
+      );
 
       if (reactionRecords.length > 0) {
         await batchInsert(schema.reactions, reactionRecords, {
@@ -170,13 +156,9 @@ export class BackfillWorker {
         return;
       }
 
-      const linkRecords = linkMessages.map((message) => ({
-        hash: message.hash,
-        fid: message.data.fid,
-        targetFid: message.data.linkBody?.targetFid || 0,
-        type: "follow" as const,
-        timestamp: new Date(message.data.timestamp * 1000),
-      }));
+      const linkRecords = linkMessages.map((message) =>
+        createLinkRecordFromApiMessage(message)
+      );
 
       if (linkRecords.length > 0) {
         await batchInsert(schema.links, linkRecords, {
@@ -202,13 +184,9 @@ export class BackfillWorker {
         return;
       }
 
-      const verificationRecords = verificationMessages.map((message) => ({
-        hash: message.hash,
-        fid: message.data.fid,
-        address: message.data.verificationAddEthAddressBody?.address || "",
-        protocol: "ethereum" as const,
-        timestamp: new Date(message.data.timestamp * 1000),
-      }));
+      const verificationRecords = verificationMessages.map((message) =>
+        createVerificationRecordFromApiMessage(message)
+      );
 
       if (verificationRecords.length > 0) {
         await batchInsert(schema.verifications, verificationRecords, {
@@ -236,22 +214,9 @@ export class BackfillWorker {
         return;
       }
 
-      const eventRecords = onChainEventMessages.map((event) => ({
-        type: event.type,
-        chainId: event.chainId,
-        blockNumber: event.blockNumber,
-        blockHash: event.blockHash,
-        blockTimestamp: new Date(event.blockTimestamp * 1000),
-        transactionHash: event.transactionHash,
-        logIndex: event.logIndex,
-        fid: event.fid,
-        signerEventBody: event.signerEventBody
-          ? JSON.stringify(event.signerEventBody)
-          : null,
-        idRegistryEventBody: event.idRegisterEventBody
-          ? JSON.stringify(event.idRegisterEventBody)
-          : null,
-      }));
+      const eventRecords = onChainEventMessages.map((event) =>
+        createOnChainEventRecord(event)
+      );
 
       if (eventRecords.length > 0) {
         await batchInsert(schema.onChainEvents, eventRecords, {

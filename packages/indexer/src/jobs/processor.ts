@@ -1,56 +1,41 @@
-import { db, schema, batchInsert } from "@farcaster-indexer/shared";
+import {
+  db,
+  schema,
+  batchInsert,
+  parseMessageFromJson,
+  createCastRecord,
+  createReactionRecord,
+  createLinkRecord,
+  createVerificationRecord,
+  createUserDataRecord,
+  createOnChainEventRecord,
+  convertMessageHash,
+  type CastRecord,
+  type ReactionRecord,
+  type LinkRecord,
+  type VerificationRecord,
+  type UserDataRecord,
+  type OnChainEventRecord,
+} from "@farcaster-indexer/shared";
 import { eq, sql } from "drizzle-orm";
 import type { ProcessEventJob } from "../queue.js";
 import type {
   FarcasterHttpEvent,
   FarcasterHttpMessage,
 } from "@farcaster-indexer/shared";
-import {
-  Message,
-  MessageType,
-  ReactionType,
-  UserDataType,
-  fromFarcasterTime,
-} from "@farcaster/core";
+import { Message, MessageType } from "@farcaster/core";
 import { bytesToHex } from "viem";
 
-// Helper function to convert UserDataType enum to human-readable string
-function userDataTypeToString(type: UserDataType): string {
-  switch (type) {
-    case UserDataType.PFP:
-      return "pfp";
-    case UserDataType.DISPLAY:
-      return "display";
-    case UserDataType.BIO:
-      return "bio";
-    case UserDataType.USERNAME:
-      return "username";
-    case UserDataType.URL:
-      return "url";
-    case UserDataType.LOCATION:
-      return "location";
-    case UserDataType.TWITTER:
-      return "twitter";
-    case UserDataType.GITHUB:
-      return "github";
-    case UserDataType.BANNER:
-      return "banner";
-    case UserDataType.USER_DATA_PRIMARY_ADDRESS_ETHEREUM:
-      return "ethereum_address";
-    case UserDataType.USER_DATA_PRIMARY_ADDRESS_SOLANA:
-      return "solana_address";
-    default:
-      return "unknown";
-  }
-}
-
 export class ProcessorWorker {
-  private pendingCasts: any[] = [];
-  private pendingReactions: any[] = [];
-  private pendingLinks: any[] = [];
-  private pendingVerifications: any[] = [];
-  private pendingUserData: any[] = [];
-  private pendingOnChainEvents: any[] = [];
+  private pendingCasts: CastRecord[] = [];
+  private pendingReactions: ReactionRecord[] = [];
+  private pendingLinks: LinkRecord[] = [];
+  private pendingVerifications: VerificationRecord[] = [];
+  private pendingUserData: {
+    message: Message;
+    userDataRecord: UserDataRecord;
+  }[] = [];
+  private pendingOnChainEvents: OnChainEventRecord[] = [];
   private batchTimer: NodeJS.Timeout | null = null;
   private readonly BATCH_SIZE = 100;
   private readonly BATCH_TIMEOUT = 1000; // 1 second
@@ -94,7 +79,7 @@ export class ProcessorWorker {
   private async addMessageToBatch(event: FarcasterHttpEvent): Promise<void> {
     const httpMessage = event.mergeMessageBody?.message;
     if (!httpMessage) return;
-    const parsedMessage = Message.fromJSON(httpMessage);
+    const parsedMessage = parseMessageFromJson(httpMessage);
 
     switch (parsedMessage.data?.type) {
       case MessageType.CAST_ADD:
@@ -130,99 +115,41 @@ export class ProcessorWorker {
   }
 
   private addCastToBatch(message: Message): void {
-    if (!message.data) return;
-
-    const castData = message.data.castAddBody;
-    if (!castData) return;
-
-    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
-
-    this.pendingCasts.push({
-      hash: bytesToHex(message.hash),
-      fid: message.data.fid,
-      text: castData.text,
-      parentHash: castData.parentCastId?.hash
-        ? bytesToHex(castData.parentCastId.hash)
-        : null,
-      parentFid: castData.parentCastId?.fid || null,
-      parentUrl: castData.parentUrl || null,
-      timestamp: new Date(timestamp),
-      embeds: castData.embeds ? JSON.stringify(castData.embeds) : null,
-    });
+    const castRecord = createCastRecord(message);
+    if (castRecord) {
+      this.pendingCasts.push(castRecord);
+    }
   }
 
   private addReactionToBatch(message: Message): void {
-    if (!message.data) return;
-
-    const reactionData = message.data.reactionBody;
-    if (!reactionData || !reactionData.targetCastId) return;
-
-    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
-
-    this.pendingReactions.push({
-      hash: bytesToHex(message.hash),
-      fid: message.data.fid,
-      type:
-        reactionData.type === ReactionType.LIKE
-          ? ("like" as const)
-          : ("recast" as const),
-      targetHash: bytesToHex(reactionData.targetCastId.hash),
-      timestamp: new Date(timestamp),
-    });
+    const reactionRecord = createReactionRecord(message);
+    if (reactionRecord) {
+      this.pendingReactions.push(reactionRecord);
+    }
   }
 
   private addLinkToBatch(message: Message): void {
-    if (!message.data) return;
-
-    const linkData = message.data.linkBody;
-    if (!linkData) return;
-
-    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
-
-    this.pendingLinks.push({
-      hash: bytesToHex(message.hash),
-      fid: message.data.fid,
-      targetFid: linkData.targetFid,
-      type: "follow" as const,
-      timestamp: new Date(timestamp),
-    });
+    const linkRecord = createLinkRecord(message);
+    if (linkRecord) {
+      this.pendingLinks.push(linkRecord);
+    }
   }
 
   private addVerificationToBatch(message: Message): void {
-    if (!message.data) return;
-
-    const verificationData = message.data.verificationAddAddressBody;
-    if (!verificationData) return;
-
-    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
-
-    this.pendingVerifications.push({
-      hash: bytesToHex(message.hash),
-      fid: message.data.fid,
-      address: verificationData.address,
-      protocol: "ethereum" as const,
-      timestamp: new Date(timestamp),
-    });
+    const verificationRecord = createVerificationRecord(message);
+    if (verificationRecord) {
+      this.pendingVerifications.push(verificationRecord);
+    }
   }
 
   private addUserDataToBatch(message: Message): void {
-    if (!message.data) return;
-
-    const userDataBody = message.data.userDataBody;
-    if (!userDataBody) return;
-
-    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
-
-    this.pendingUserData.push({
-      message,
-      userDataRecord: {
-        hash: bytesToHex(message.hash),
-        fid: message.data.fid,
-        type: userDataTypeToString(userDataBody.type),
-        value: userDataBody.value,
-        timestamp: new Date(timestamp),
-      },
-    });
+    const userDataRecord = createUserDataRecord(message);
+    if (userDataRecord) {
+      this.pendingUserData.push({
+        message,
+        userDataRecord,
+      });
+    }
   }
 
   private async addOnChainEventToBatch(
@@ -231,22 +158,8 @@ export class ProcessorWorker {
     const onChainEvent = event.mergeOnChainEventBody?.onChainEvent;
     if (!onChainEvent) return;
 
-    this.pendingOnChainEvents.push({
-      type: onChainEvent.type,
-      chainId: onChainEvent.chainId,
-      blockNumber: onChainEvent.blockNumber,
-      blockHash: onChainEvent.blockHash,
-      blockTimestamp: new Date(onChainEvent.blockTimestamp * 1000),
-      transactionHash: onChainEvent.transactionHash,
-      logIndex: onChainEvent.logIndex,
-      fid: onChainEvent.fid,
-      signerEventBody: onChainEvent.signerEventBody
-        ? JSON.stringify(onChainEvent.signerEventBody)
-        : null,
-      idRegistryEventBody: onChainEvent.idRegisterEventBody
-        ? JSON.stringify(onChainEvent.idRegisterEventBody)
-        : null,
-    });
+    const eventRecord = createOnChainEventRecord(onChainEvent);
+    this.pendingOnChainEvents.push(eventRecord);
   }
 
   private async checkAndFlushBatches(): Promise<void> {
@@ -274,40 +187,78 @@ export class ProcessorWorker {
       this.batchTimer = null;
     }
 
-    const batches = [
-      { name: "casts", data: this.pendingCasts, table: schema.casts },
-      {
-        name: "reactions",
-        data: this.pendingReactions,
-        table: schema.reactions,
-      },
-      { name: "links", data: this.pendingLinks, table: schema.links },
-      {
-        name: "verifications",
-        data: this.pendingVerifications,
-        table: schema.verifications,
-      },
-      {
-        name: "onChainEvents",
-        data: this.pendingOnChainEvents,
-        table: schema.onChainEvents,
-      },
-    ];
-
     // Process regular batches
-    for (const batch of batches) {
-      if (batch.data.length > 0) {
-        try {
-          await batchInsert(batch.table, batch.data, {
-            batchSize: 100,
-            onConflictDoNothing: true,
-          });
-          console.log(`Batch inserted ${batch.data.length} ${batch.name}`);
-          batch.data.length = 0; // Clear the batch
-        } catch (error) {
-          console.error(`Failed to batch insert ${batch.name}:`, error);
-          batch.data.length = 0; // Clear even on error to prevent memory leaks
-        }
+    if (this.pendingCasts.length > 0) {
+      try {
+        await batchInsert(schema.casts, this.pendingCasts, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
+        console.log(`Batch inserted ${this.pendingCasts.length} casts`);
+        this.pendingCasts.length = 0;
+      } catch (error) {
+        console.error("Failed to batch insert casts:", error);
+        this.pendingCasts.length = 0;
+      }
+    }
+
+    if (this.pendingReactions.length > 0) {
+      try {
+        await batchInsert(schema.reactions, this.pendingReactions, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
+        console.log(`Batch inserted ${this.pendingReactions.length} reactions`);
+        this.pendingReactions.length = 0;
+      } catch (error) {
+        console.error("Failed to batch insert reactions:", error);
+        this.pendingReactions.length = 0;
+      }
+    }
+
+    if (this.pendingLinks.length > 0) {
+      try {
+        await batchInsert(schema.links, this.pendingLinks, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
+        console.log(`Batch inserted ${this.pendingLinks.length} links`);
+        this.pendingLinks.length = 0;
+      } catch (error) {
+        console.error("Failed to batch insert links:", error);
+        this.pendingLinks.length = 0;
+      }
+    }
+
+    if (this.pendingVerifications.length > 0) {
+      try {
+        await batchInsert(schema.verifications, this.pendingVerifications, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
+        console.log(
+          `Batch inserted ${this.pendingVerifications.length} verifications`
+        );
+        this.pendingVerifications.length = 0;
+      } catch (error) {
+        console.error("Failed to batch insert verifications:", error);
+        this.pendingVerifications.length = 0;
+      }
+    }
+
+    if (this.pendingOnChainEvents.length > 0) {
+      try {
+        await batchInsert(schema.onChainEvents, this.pendingOnChainEvents, {
+          batchSize: 100,
+          onConflictDoNothing: true,
+        });
+        console.log(
+          `Batch inserted ${this.pendingOnChainEvents.length} onChainEvents`
+        );
+        this.pendingOnChainEvents.length = 0;
+      } catch (error) {
+        console.error("Failed to batch insert onChainEvents:", error);
+        this.pendingOnChainEvents.length = 0;
       }
     }
 

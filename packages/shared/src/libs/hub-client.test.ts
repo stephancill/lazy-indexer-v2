@@ -57,7 +57,7 @@ const MOCK_RESPONSES = {
 };
 
 // Set up global mock
-globalThis.fetch = mockFetch;
+globalThis.fetch = mockFetch as unknown as typeof fetch;
 
 describe("HubClient", () => {
   let hubClient: HubClient;
@@ -96,19 +96,25 @@ describe("HubClient", () => {
       })
     );
 
-    hubClient = new HubClient(mockHubConfigs, mockFetch);
+    hubClient = new HubClient(
+      mockHubConfigs,
+      mockFetch as unknown as typeof fetch
+    );
   });
 
   describe("Constructor", () => {
     it("should initialize with provided hub configs", () => {
-      const client = new HubClient(mockHubConfigs, mockFetch);
+      const client = new HubClient(
+        mockHubConfigs,
+        mockFetch as unknown as typeof fetch
+      );
       expect(client.getCurrentHub()).toEqual(mockHubConfigs[0]);
     });
 
     it("should throw error when no hubs provided", () => {
-      expect(() => new HubClient([], mockFetch)).toThrow(
-        "At least one hub configuration is required"
-      );
+      expect(
+        () => new HubClient([], mockFetch as unknown as typeof fetch)
+      ).toThrow("At least one hub configuration is required");
     });
   });
 
@@ -151,7 +157,10 @@ describe("HubClient", () => {
       });
 
       // Force to use second hub
-      hubClient = new HubClient([mockHubConfigs[1]], mockFetch);
+      hubClient = new HubClient(
+        [mockHubConfigs[1]],
+        mockFetch as unknown as typeof fetch
+      );
 
       await hubClient.request("/test");
 
@@ -180,7 +189,10 @@ describe("HubClient", () => {
       );
 
       // Create a new client instance with the error mock
-      const errorTestClient = new HubClient(mockHubConfigs, errorMockFetch);
+      const errorTestClient = new HubClient(
+        mockHubConfigs,
+        errorMockFetch as unknown as typeof fetch
+      );
 
       await expect(errorTestClient.request("/test")).rejects.toThrow(
         "HTTP 404: Not Found"
@@ -412,7 +424,10 @@ describe("HubClient", () => {
 
   describe("Edge Cases", () => {
     it("should handle single hub configuration", () => {
-      const singleHubClient = new HubClient([mockHubConfigs[0]], mockFetch);
+      const singleHubClient = new HubClient(
+        [mockHubConfigs[0]],
+        mockFetch as unknown as typeof fetch
+      );
       expect(singleHubClient.getCurrentHub()).toEqual(mockHubConfigs[0]);
     });
 

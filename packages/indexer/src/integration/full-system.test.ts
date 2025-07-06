@@ -16,7 +16,7 @@ import { HubClient, schema } from "@farcaster-indexer/shared";
 import { RealtimeWorker } from "../jobs/realtime.js";
 import { ProcessorWorker } from "../jobs/processor.js";
 import { BackfillWorker } from "../jobs/backfill.js";
-import type { FarcasterEvent } from "@farcaster-indexer/shared";
+import type { FarcasterHttpEvent } from "@farcaster-indexer/shared";
 
 // Mock fetch globally
 const mockFetch = vi.fn() as any;
@@ -31,6 +31,14 @@ vi.mock("bullmq", () => ({
     getJobCounts: vi
       .fn()
       .mockResolvedValue({ waiting: 0, active: 0, completed: 0, failed: 0 }),
+    obliterate: vi.fn().mockResolvedValue(undefined),
+    drain: vi.fn().mockResolvedValue(undefined),
+  })),
+  QueueEvents: vi.fn().mockImplementation(() => ({
+    close: vi.fn().mockResolvedValue(undefined),
+  })),
+  Worker: vi.fn().mockImplementation(() => ({
+    close: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
@@ -146,8 +154,8 @@ describe("Full System Integration Tests", () => {
       expect(target?.lastSyncedAt).toBeDefined();
 
       // 5. Simulate real-time event processing
-      const castEvent: FarcasterEvent = {
-        type: "MERGE_MESSAGE",
+      const castEvent: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
         id: 1001,
         mergeMessageBody: {
           message: {
@@ -155,6 +163,7 @@ describe("Full System Integration Tests", () => {
               fid: testFid,
               type: "MESSAGE_TYPE_CAST_ADD",
               timestamp: Math.floor(Date.now() / 1000),
+              network: "FARCASTER_NETWORK_MAINNET",
               castAddBody: {
                 text: "Integration test cast",
                 embeds: [],
@@ -168,6 +177,7 @@ describe("Full System Integration Tests", () => {
             signatureScheme: "SIGNATURE_SCHEME_ED25519",
             signer: "test-signer",
           },
+          deletedMessages: [],
         },
       };
 
@@ -204,8 +214,8 @@ describe("Full System Integration Tests", () => {
       });
 
       // 2. Simulate follow event
-      const followEvent: FarcasterEvent = {
-        type: "MERGE_MESSAGE",
+      const followEvent: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
         id: 1002,
         mergeMessageBody: {
           message: {
@@ -213,6 +223,7 @@ describe("Full System Integration Tests", () => {
               fid: rootFid,
               type: "MESSAGE_TYPE_LINK_ADD",
               timestamp: Math.floor(Date.now() / 1000),
+              network: "FARCASTER_NETWORK_MAINNET",
               linkBody: {
                 type: "follow",
                 targetFid: targetFid,
@@ -224,6 +235,7 @@ describe("Full System Integration Tests", () => {
             signatureScheme: "SIGNATURE_SCHEME_ED25519",
             signer: "follow-signer",
           },
+          deletedMessages: [],
         },
       };
 
@@ -284,8 +296,8 @@ describe("Full System Integration Tests", () => {
       });
 
       // 3. Simulate reaction event
-      const reactionEvent: FarcasterEvent = {
-        type: "MERGE_MESSAGE",
+      const reactionEvent: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
         id: 1003,
         mergeMessageBody: {
           message: {
@@ -293,8 +305,9 @@ describe("Full System Integration Tests", () => {
               fid: reactionFid,
               type: "MESSAGE_TYPE_REACTION_ADD",
               timestamp: Math.floor(Date.now() / 1000),
+              network: "FARCASTER_NETWORK_MAINNET",
               reactionBody: {
-                type: "LIKE",
+                type: "REACTION_TYPE_LIKE",
                 targetCastId: {
                   fid: castFid,
                   hash: castHash,
@@ -307,6 +320,7 @@ describe("Full System Integration Tests", () => {
             signatureScheme: "SIGNATURE_SCHEME_ED25519",
             signer: "reaction-signer",
           },
+          deletedMessages: [],
         },
       };
 
@@ -342,8 +356,8 @@ describe("Full System Integration Tests", () => {
       });
 
       // 2. Simulate signer add event for client
-      const signerEvent: FarcasterEvent = {
-        type: "MERGE_ON_CHAIN_EVENT",
+      const signerEvent: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT",
         id: 1004,
         mergeOnChainEventBody: {
           onChainEvent: {
@@ -358,7 +372,7 @@ describe("Full System Integration Tests", () => {
             signerEventBody: {
               key: "signer-key",
               keyType: 1,
-              eventType: "ADD",
+              eventType: "SIGNER_EVENT_TYPE_ADD",
               metadata: `client:${clientFid}`,
               metadataType: 1,
             },
@@ -417,8 +431,8 @@ describe("Full System Integration Tests", () => {
     it("should handle database connection issues", async () => {
       // This test would require mocking database failures
       // For now, we'll test that the system doesn't crash with invalid data
-      const invalidEvent: FarcasterEvent = {
-        type: "MERGE_MESSAGE",
+      const invalidEvent: FarcasterHttpEvent = {
+        type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
         id: 1005,
         mergeMessageBody: {
           message: {
@@ -426,6 +440,7 @@ describe("Full System Integration Tests", () => {
               fid: -1, // Invalid FID
               type: "MESSAGE_TYPE_CAST_ADD",
               timestamp: -1, // Invalid timestamp
+              network: "FARCASTER_NETWORK_MAINNET",
               castAddBody: {
                 text: "", // Empty text
                 embeds: [],
@@ -439,6 +454,7 @@ describe("Full System Integration Tests", () => {
             signatureScheme: "SIGNATURE_SCHEME_ED25519",
             signer: "",
           },
+          deletedMessages: [],
         },
       };
 
@@ -455,13 +471,13 @@ describe("Full System Integration Tests", () => {
 
   describe("Performance and Scalability", () => {
     it("should handle multiple concurrent jobs", async () => {
-      const jobPromises = [];
+      const jobPromises: Promise<void>[] = [];
 
       // Create multiple jobs
       for (let i = 0; i < 10; i++) {
         const job = await processorQueue.add("process-event", {
           event: {
-            type: "MERGE_MESSAGE",
+            type: "HUB_EVENT_TYPE_MERGE_MESSAGE",
             id: 2000 + i,
             mergeMessageBody: {
               message: {
@@ -469,6 +485,7 @@ describe("Full System Integration Tests", () => {
                   fid: 10 + i,
                   type: "MESSAGE_TYPE_CAST_ADD",
                   timestamp: Math.floor(Date.now() / 1000),
+                  network: "FARCASTER_NETWORK_MAINNET",
                   castAddBody: {
                     text: `Concurrent cast ${i}`,
                     embeds: [],
@@ -482,6 +499,7 @@ describe("Full System Integration Tests", () => {
                 signatureScheme: "SIGNATURE_SCHEME_ED25519",
                 signer: `signer-${i}`,
               },
+              deletedMessages: [],
             },
           },
         });

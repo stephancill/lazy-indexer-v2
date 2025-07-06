@@ -62,8 +62,8 @@ export const config: Config = {
   ],
 
   strategy: {
-    rootTargets: [1, 2, 3],
-    targetClients: [4, 5, 6],
+    rootTargets: [],
+    targetClients: [],
     enableClientDiscovery: true,
   },
 
