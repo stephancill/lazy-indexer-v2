@@ -10,6 +10,7 @@ import {
   MessageType,
   ReactionType,
   UserDataType,
+  fromFarcasterTime,
 } from "@farcaster/core";
 import { bytesToHex } from "viem";
 
@@ -134,6 +135,8 @@ export class ProcessorWorker {
     const castData = message.data.castAddBody;
     if (!castData) return;
 
+    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
+
     this.pendingCasts.push({
       hash: bytesToHex(message.hash),
       fid: message.data.fid,
@@ -143,7 +146,7 @@ export class ProcessorWorker {
         : null,
       parentFid: castData.parentCastId?.fid || null,
       parentUrl: castData.parentUrl || null,
-      timestamp: new Date(message.data.timestamp * 1000),
+      timestamp: new Date(timestamp),
       embeds: castData.embeds ? JSON.stringify(castData.embeds) : null,
     });
   }
@@ -154,6 +157,8 @@ export class ProcessorWorker {
     const reactionData = message.data.reactionBody;
     if (!reactionData || !reactionData.targetCastId) return;
 
+    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
+
     this.pendingReactions.push({
       hash: bytesToHex(message.hash),
       fid: message.data.fid,
@@ -162,7 +167,7 @@ export class ProcessorWorker {
           ? ("like" as const)
           : ("recast" as const),
       targetHash: bytesToHex(reactionData.targetCastId.hash),
-      timestamp: new Date(message.data.timestamp * 1000),
+      timestamp: new Date(timestamp),
     });
   }
 
@@ -172,12 +177,14 @@ export class ProcessorWorker {
     const linkData = message.data.linkBody;
     if (!linkData) return;
 
+    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
+
     this.pendingLinks.push({
       hash: bytesToHex(message.hash),
       fid: message.data.fid,
       targetFid: linkData.targetFid,
       type: "follow" as const,
-      timestamp: new Date(message.data.timestamp * 1000),
+      timestamp: new Date(timestamp),
     });
   }
 
@@ -187,12 +194,14 @@ export class ProcessorWorker {
     const verificationData = message.data.verificationAddAddressBody;
     if (!verificationData) return;
 
+    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
+
     this.pendingVerifications.push({
       hash: bytesToHex(message.hash),
       fid: message.data.fid,
       address: verificationData.address,
       protocol: "ethereum" as const,
-      timestamp: new Date(message.data.timestamp * 1000),
+      timestamp: new Date(timestamp),
     });
   }
 
@@ -202,6 +211,8 @@ export class ProcessorWorker {
     const userDataBody = message.data.userDataBody;
     if (!userDataBody) return;
 
+    const timestamp = fromFarcasterTime(message.data.timestamp)._unsafeUnwrap();
+
     this.pendingUserData.push({
       message,
       userDataRecord: {
@@ -209,7 +220,7 @@ export class ProcessorWorker {
         fid: message.data.fid,
         type: userDataTypeToString(userDataBody.type),
         value: userDataBody.value,
-        timestamp: new Date(message.data.timestamp * 1000),
+        timestamp: new Date(timestamp),
       },
     });
   }

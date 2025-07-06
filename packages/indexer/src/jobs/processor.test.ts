@@ -8,6 +8,7 @@ import {
   MessageType,
   ReactionType,
   UserDataType,
+  fromFarcasterTime,
 } from "@farcaster/core";
 import { bytesToHex } from "viem";
 
@@ -127,6 +128,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(142041602)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.casts,
         expect.arrayContaining([
@@ -137,7 +140,7 @@ describe("ProcessorWorker", () => {
             parentHash: null,
             parentFid: null,
             hash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
             embeds: expect.any(String),
           }),
         ]),
@@ -187,6 +190,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(142041603)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.reactions,
         expect.arrayContaining([
@@ -195,7 +200,7 @@ describe("ProcessorWorker", () => {
             type: "like",
             hash: expect.any(String),
             targetHash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
@@ -263,6 +268,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called for user data
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(142041680)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.userData,
         expect.arrayContaining([
@@ -272,7 +279,7 @@ describe("ProcessorWorker", () => {
             value:
               "https://imagedelivery.net/BXluQx4ige9GuW0Ia56BHw/95e044eb-c3e1-47ca-ae1a-6cfce9f2ce00/original",
             hash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
@@ -363,6 +370,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(53200214)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.casts,
         expect.arrayContaining([
@@ -373,7 +382,7 @@ describe("ProcessorWorker", () => {
             parentFid: null,
             parentUrl: null,
             hash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
             embeds: "[]",
           }),
         ]),
@@ -418,6 +427,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(127590822)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.reactions,
         expect.arrayContaining([
@@ -426,7 +437,7 @@ describe("ProcessorWorker", () => {
             type: "like",
             hash: expect.any(String),
             targetHash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
@@ -468,11 +479,14 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(127590822)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.reactions,
         expect.arrayContaining([
           expect.objectContaining({
             type: "recast",
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
@@ -513,6 +527,8 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(69403502)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.userData,
         expect.arrayContaining([
@@ -521,7 +537,7 @@ describe("ProcessorWorker", () => {
             type: "username",
             value: "stephancill",
             hash: expect.any(String),
-            timestamp: expect.any(Date),
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
@@ -560,12 +576,15 @@ describe("ProcessorWorker", () => {
 
       // Check that mockBatchInsert was called
       expect(mockBatchInsert).toHaveBeenCalled();
+      const expectedTimestamp = fromFarcasterTime(126968968)._unsafeUnwrap();
+
       expect(mockBatchInsert).toHaveBeenCalledWith(
         mockSchema.userData,
         expect.arrayContaining([
           expect.objectContaining({
             type: "display",
             value: "Stephan",
+            timestamp: new Date(expectedTimestamp),
           }),
         ]),
         expect.objectContaining({
