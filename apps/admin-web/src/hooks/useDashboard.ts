@@ -13,7 +13,20 @@ export const useDashboardStats = () => {
 
       const health = healthData as {
         stats?: {
-          targets?: { total?: string; root?: string; clients?: string };
+          targets?: {
+            total?: number;
+            root?: number;
+            clients?: number;
+            synced?: number;
+            unsynced?: number;
+            waiting?: number;
+          };
+          data?: {
+            casts?: number;
+            users?: number;
+            reactions?: number;
+            links?: number;
+          };
         };
       };
       const jobs = jobsData as {
@@ -47,15 +60,14 @@ export const useDashboardStats = () => {
 
       return {
         targets: {
-          total: Number.parseInt(statsData.targets?.total || "0"),
-          root: Number.parseInt(statsData.targets?.root || "0"),
-          synced:
-            Number.parseInt(statsData.targets?.total || "0") -
-            Number.parseInt(statsData.targets?.root || "0"),
-          unsynced: 0,
+          total: statsData.targets?.total || 0,
+          root: statsData.targets?.root || 0,
+          synced: statsData.targets?.synced || 0,
+          unsynced: statsData.targets?.unsynced || 0,
+          waiting: statsData.targets?.waiting || 0,
         },
         clientTargets: {
-          total: Number.parseInt(statsData.targets?.clients || "0"),
+          total: statsData.targets?.clients || 0,
         },
         jobs: {
           active: totalJobs.active || 0,

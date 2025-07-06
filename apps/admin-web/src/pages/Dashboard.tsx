@@ -16,6 +16,8 @@ import {
   XCircle,
   Clock,
   TrendingUp,
+  AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useDashboardStats } from "../hooks/useDashboard";
 
@@ -166,6 +168,13 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Waiting Targets</span>
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm">{stats?.targets.waiting || 0}</span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Unsynced Targets</span>
                 <div className="flex items-center space-x-2">
                   <XCircle className="h-4 w-4 text-red-500" />
@@ -174,22 +183,59 @@ const Dashboard: React.FC = () => {
                   </span>
                 </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${((stats?.targets.synced || 0) / Math.max(stats?.targets.total || 1, 1)) * 100}%`,
-                  }}
-                />
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="h-full flex">
+                  <div
+                    className="bg-green-500 h-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        ((stats?.targets.synced || 0) /
+                          Math.max(stats?.targets.total || 1, 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                  <div
+                    className="bg-blue-500 h-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        ((stats?.targets.waiting || 0) /
+                          Math.max(stats?.targets.total || 1, 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                  <div
+                    className="bg-red-500 h-full transition-all duration-300"
+                    style={{
+                      width: `${
+                        ((stats?.targets.unsynced || 0) /
+                          Math.max(stats?.targets.total || 1, 1)) *
+                        100
+                      }%`,
+                    }}
+                  />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.round(
-                  ((stats?.targets.synced || 0) /
-                    Math.max(stats?.targets.total || 1, 1)) *
-                    100
-                )}
-                % synced
-              </p>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>
+                  {Math.round(
+                    ((stats?.targets.synced || 0) /
+                      Math.max(stats?.targets.total || 1, 1)) *
+                      100
+                  )}
+                  % synced
+                </span>
+                <span>
+                  {Math.round(
+                    (((stats?.targets.synced || 0) +
+                      (stats?.targets.waiting || 0)) /
+                      Math.max(stats?.targets.total || 1, 1)) *
+                      100
+                  )}
+                  % in progress
+                </span>
+              </div>
             </div>
           </CardContent>
         </Card>

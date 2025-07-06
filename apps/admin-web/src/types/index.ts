@@ -64,6 +64,7 @@ export interface DashboardStats {
     root: number;
     synced: number;
     unsynced: number;
+    waiting: number;
   };
   clientTargets: {
     total: number;

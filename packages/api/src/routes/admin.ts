@@ -593,6 +593,8 @@ adminRoutes.get("/stats", async (c) => {
       totalUsers,
       totalReactions,
       totalLinks,
+      syncedTargets,
+      unsyncedTargets,
     ] = await Promise.all([
       db.select({ count: sql<number>`count(*)` }).from(targets),
       db
@@ -604,20 +606,39 @@ adminRoutes.get("/stats", async (c) => {
       db.select({ count: sql<number>`count(*)` }).from(users),
       db.select({ count: sql<number>`count(*)` }).from(reactions),
       db.select({ count: sql<number>`count(*)` }).from(links),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(targets)
+        .where(sql`${targets.lastSyncedAt} IS NOT NULL`),
+      db.query.targets.findMany({
+        where: sql`${targets.lastSyncedAt} IS NULL`,
+        columns: { fid: true },
+      }),
     ]);
+
+    // Get job status for unsynced targets to determine waiting count
+    const unsyncedFids = unsyncedTargets.map((t) => t.fid);
+    const jobStatuses = await getBackfillJobsStatus(unsyncedFids);
+
+    // Count waiting targets (unsynced targets with pending jobs)
+    const waitingCount = unsyncedFids.filter((fid) => jobStatuses[fid]).length;
+    const unsyncedCount = unsyncedFids.length - waitingCount;
 
     return c.json({
       stats: {
         targets: {
-          total: totalTargets[0]?.count || 0,
-          root: rootTargets[0]?.count || 0,
-          clients: clientTargets[0]?.count || 0,
+          total: Number(totalTargets[0]?.count) || 0,
+          root: Number(rootTargets[0]?.count) || 0,
+          clients: Number(clientTargets[0]?.count) || 0,
+          synced: Number(syncedTargets[0]?.count) || 0,
+          unsynced: unsyncedCount,
+          waiting: waitingCount,
         },
         data: {
-          casts: totalCasts[0]?.count || 0,
-          users: totalUsers[0]?.count || 0,
-          reactions: totalReactions[0]?.count || 0,
-          links: totalLinks[0]?.count || 0,
+          casts: Number(totalCasts[0]?.count) || 0,
+          users: Number(totalUsers[0]?.count) || 0,
+          reactions: Number(totalReactions[0]?.count) || 0,
+          links: Number(totalLinks[0]?.count) || 0,
         },
       },
     });
@@ -761,20 +782,20 @@ adminRoutes.get("/stats/realtime", async (c) => {
     return c.json({
       stats: {
         targets: {
-          total: totalTargets[0]?.count || 0,
-          root: rootTargets[0]?.count || 0,
-          clients: clientTargets[0]?.count || 0,
-          unsynced: unsyncedTargets[0]?.count || 0,
+          total: Number(totalTargets[0]?.count) || 0,
+          root: Number(rootTargets[0]?.count) || 0,
+          clients: Number(clientTargets[0]?.count) || 0,
+          unsynced: Number(unsyncedTargets[0]?.count) || 0,
         },
         data: {
-          casts: totalCasts[0]?.count || 0,
-          users: totalUsers[0]?.count || 0,
-          reactions: totalReactions[0]?.count || 0,
-          links: totalLinks[0]?.count || 0,
+          casts: Number(totalCasts[0]?.count) || 0,
+          users: Number(totalUsers[0]?.count) || 0,
+          reactions: Number(totalReactions[0]?.count) || 0,
+          links: Number(totalLinks[0]?.count) || 0,
         },
         activity: {
-          recentCasts: recentCasts[0]?.count || 0,
-          recentReactions: recentReactions[0]?.count || 0,
+          recentCasts: Number(recentCasts[0]?.count) || 0,
+          recentReactions: Number(recentReactions[0]?.count) || 0,
         },
         queues: queueStats,
       },
