@@ -12,29 +12,29 @@ interface InfiniteScrollProps<T> {
 }
 
 const DefaultSkeleton = () => (
-  <div className="space-y-4 p-4">
+  <div className="space-y-4 p-3 md:p-4">
     <div className="flex space-x-3">
-      <Skeleton className="h-10 w-10 rounded-full" />
+      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full flex-shrink-0" />
       <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 sm:h-4 w-24 sm:w-32" />
+        <Skeleton className="h-3 sm:h-4 w-full" />
+        <Skeleton className="h-3 sm:h-4 w-3/4" />
       </div>
     </div>
     <div className="flex space-x-3">
-      <Skeleton className="h-10 w-10 rounded-full" />
+      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full flex-shrink-0" />
       <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 sm:h-4 w-24 sm:w-32" />
+        <Skeleton className="h-3 sm:h-4 w-full" />
+        <Skeleton className="h-3 sm:h-4 w-3/4" />
       </div>
     </div>
     <div className="flex space-x-3">
-      <Skeleton className="h-10 w-10 rounded-full" />
+      <Skeleton className="h-8 w-8 sm:h-10 sm:w-10 rounded-full flex-shrink-0" />
       <div className="flex-1 space-y-2">
-        <Skeleton className="h-4 w-32" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 sm:h-4 w-24 sm:w-32" />
+        <Skeleton className="h-3 sm:h-4 w-full" />
+        <Skeleton className="h-3 sm:h-4 w-3/4" />
       </div>
     </div>
   </div>
@@ -88,8 +88,8 @@ const InfiniteScroll = <T,>({
       )}
 
       {!hasMore && data.length > 0 && (
-        <div className="text-center py-8 text-gray-500">
-          <p>No more items to load</p>
+        <div className="text-center py-6 sm:py-8 text-gray-500 px-4">
+          <p className="text-sm">No more items to load</p>
         </div>
       )}
     </div>

@@ -1,62 +1,127 @@
-import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { ComponentType, ReactNode } from "react";
-
-interface SocialNavLinkProps {
-  to: string;
-  icon: ComponentType<{ className?: string }>;
-  children: ReactNode;
-}
-
-const SocialNavLink = ({ to, icon: Icon, children }: SocialNavLinkProps) => {
-  const location = useLocation();
-  const isActive = location.pathname === to;
-
-  return (
-    <Link
-      to={to}
-      className={cn(
-        "flex items-center space-x-3 px-6 py-3 rounded-lg transition-colors hover:bg-gray-100",
-        isActive && "bg-blue-50 text-blue-600 font-medium"
-      )}
-    >
-      <Icon className="h-5 w-5" />
-      <span>{children}</span>
-    </Link>
-  );
-};
+import { NavLink } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import {
+  Home,
+  Search,
+  Settings,
+  LogOut,
+  MessageSquare,
+  TrendingUp,
+  User,
+} from "lucide-react";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarInset,
+  SidebarSeparator,
+} from "./ui/sidebar";
+import type { ReactNode } from "react";
 
 interface SocialLayoutProps {
   children: ReactNode;
 }
 
 const SocialLayout = ({ children }: SocialLayoutProps) => {
+  const { logout } = useAuth();
+
+  const navigation = [
+    { name: "Home", href: "/social", icon: Home },
+    { name: "Search", href: "/social/search", icon: Search },
+    { name: "Profile", href: "/social/profile/1", icon: User },
+    { name: "Trending", href: "/social/trending", icon: TrendingUp },
+  ];
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex max-w-6xl mx-auto">
-        {/* Sidebar Navigation */}
-        <div className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0">
-          <div className="p-4">
-            <h1 className="text-xl font-bold text-blue-600">Farcaster</h1>
-          </div>
+      <SidebarProvider>
+        <Sidebar>
+          <SidebarHeader>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton size="lg" asChild>
+                  <div className="flex items-center">
+                    <MessageSquare className="h-8 w-8 text-blue-600" />
+                    <span className="ml-2 text-xl font-bold text-gray-900">
+                      Farcaster
+                    </span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarHeader>
 
-          <nav className="mt-8 space-y-2">
-            <SocialNavLink to="/social" icon={Home}>
-              Home
-            </SocialNavLink>
-            <SocialNavLink to="/social/search" icon={Search}>
-              Search
-            </SocialNavLink>
-            <SocialNavLink to="/dashboard" icon={Settings}>
-              Admin
-            </SocialNavLink>
-          </nav>
-        </div>
+          <SidebarContent>
+            <SidebarMenu>
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <SidebarMenuItem key={item.name}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.href}
+                        className={({ isActive }) =>
+                          isActive ? "bg-blue-100 text-blue-700" : ""
+                        }
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span>{item.name}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
+            </SidebarMenu>
 
-        {/* Main Content */}
-        <div className="flex-1 min-h-screen">{children}</div>
-      </div>
+            <SidebarSeparator className="my-4" />
+
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/dashboard"
+                    className={({ isActive }) =>
+                      isActive ? "bg-gray-100 text-gray-700" : "text-gray-600"
+                    }
+                  >
+                    <Settings className="h-5 w-5" />
+                    <span>Admin Panel</span>
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarContent>
+
+          <SidebarFooter>
+            <SidebarSeparator />
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={handleLogout}>
+                  <LogOut className="h-5 w-5" />
+                  <span>Sign out</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarFooter>
+        </Sidebar>
+
+        <SidebarInset className="flex flex-col relative">
+          <SidebarTrigger className="absolute top-4 left-4 z-50 bg-white shadow-md rounded-md border" />
+          <main className="flex-1 p-0 md:px-6">
+            <div className="max-w-lg mx-auto w-full">{children}</div>
+          </main>
+        </SidebarInset>
+      </SidebarProvider>
     </div>
   );
 };

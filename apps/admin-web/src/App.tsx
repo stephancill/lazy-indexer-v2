@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import FeedPage from "./pages/social/FeedPage";
 import SearchPage from "./pages/social/SearchPage";
 import ProfilePage from "./pages/social/ProfilePage";
+import TrendingPage from "./pages/social/TrendingPage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -59,6 +60,10 @@ const App: React.FC = () => {
                       {/* Social Client Routes */}
                       <Route path="/social" element={<FeedPage />} />
                       <Route path="/social/search" element={<SearchPage />} />
+                      <Route
+                        path="/social/trending"
+                        element={<TrendingPage />}
+                      />
                       <Route
                         path="/social/profile/:fid"
                         element={<ProfilePage />}

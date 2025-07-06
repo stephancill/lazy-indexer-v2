@@ -153,7 +153,26 @@ export const api = {
 
   // Public endpoints
   public: {
-    feed: (fid: number) => apiClient.get(`/api/v1/feed/${fid}`),
+    feed: (fid: number, params?: { limit?: number; offset?: number }) => {
+      const searchParams = new URLSearchParams();
+      if (params?.limit) searchParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        searchParams.append("offset", params.offset.toString());
+      const queryString = searchParams.toString();
+      return apiClient.get(
+        `/api/v1/feed/${fid}${queryString ? `?${queryString}` : ""}`
+      );
+    },
+    trending: (params?: { limit?: number; offset?: number }) => {
+      const searchParams = new URLSearchParams();
+      if (params?.limit) searchParams.append("limit", params.limit.toString());
+      if (params?.offset)
+        searchParams.append("offset", params.offset.toString());
+      const queryString = searchParams.toString();
+      return apiClient.get(
+        `/api/v1/trending${queryString ? `?${queryString}` : ""}`
+      );
+    },
     cast: (hash: string) => apiClient.get(`/api/v1/casts/${hash}`),
     user: (fid: number) => apiClient.get(`/api/v1/users/${fid}`),
   },

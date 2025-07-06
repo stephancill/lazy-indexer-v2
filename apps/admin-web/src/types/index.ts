@@ -88,16 +88,30 @@ export interface Cast {
   hash: string;
   fid: number;
   text: string;
-  parentHash?: string;
-  parentFid?: number;
-  parentUrl?: string;
+  parentHash?: string | null;
+  parentFid?: number | null;
+  parentUrl?: string | null;
   timestamp: string;
-  embeds?: unknown[];
-  author?: {
+  embeds?: string; // JSON string of embeds array
+  mentions?: unknown[];
+  mentionsPositions?: unknown[];
+  createdAt?: string;
+  user?: {
     fid: number;
     username?: string;
     displayName?: string;
     pfpUrl?: string;
+    bio?: string;
+    custodyAddress?: string;
+    syncedAt?: string;
+  };
+  // For trending/stats
+  reactionCount?: string;
+  stats?: {
+    reactions?: string | number;
+    likes?: number;
+    recasts?: number;
+    replies?: number;
   };
 }
 
