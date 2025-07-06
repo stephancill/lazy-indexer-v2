@@ -32,34 +32,32 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/*"
-                element={
-                  <ProtectedRoute>
-                    <Layout>
-                      <Routes>
-                        <Route
-                          path="/"
-                          element={<Navigate to="/dashboard" replace />}
-                        />
-                        <Route path="/dashboard" element={<Dashboard />} />
-                        <Route path="/targets" element={<Targets />} />
-                        <Route
-                          path="/client-targets"
-                          element={<ClientTargets />}
-                        />
-                        <Route path="/jobs" element={<Jobs />} />
-                        <Route path="/analytics" element={<Analytics />} />
-                      </Routes>
-                    </Layout>
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </div>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <Routes>
+                      <Route
+                        path="/"
+                        element={<Navigate to="/dashboard" replace />}
+                      />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/targets" element={<Targets />} />
+                      <Route
+                        path="/client-targets"
+                        element={<ClientTargets />}
+                      />
+                      <Route path="/jobs" element={<Jobs />} />
+                      <Route path="/analytics" element={<Analytics />} />
+                    </Routes>
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
         </Router>
       </AuthProvider>
     </QueryClientProvider>
