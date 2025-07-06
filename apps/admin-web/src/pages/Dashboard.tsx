@@ -16,8 +16,6 @@ import {
   XCircle,
   Clock,
   TrendingUp,
-  AlertCircle,
-  RefreshCw,
 } from "lucide-react";
 import { useDashboardStats } from "../hooks/useDashboard";
 

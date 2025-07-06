@@ -24,10 +24,16 @@ export interface ClientTarget {
   discoveredTargets?: number;
 }
 
+export interface JobData {
+  fid?: number;
+  targetCount?: number;
+  [key: string]: unknown;
+}
+
 export interface Job {
   id: string;
   name: string;
-  data: unknown;
+  data: JobData;
   status: "active" | "waiting" | "completed" | "failed" | "delayed";
   progress: number;
   createdAt: string;

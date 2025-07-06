@@ -9,6 +9,7 @@ const {
   targets,
   targetClients,
   users,
+  userData,
   casts,
   reactions,
   links,
@@ -273,7 +274,7 @@ export const importCommand = new Command("import")
         }
       }
 
-      // Import users
+      // Import users (converted to userData records)
       if (
         (options.table === "all" || options.table === "users") &&
         importData.tables.users
@@ -285,32 +286,74 @@ export const importCommand = new Command("import")
           logger.updateSpinner(`Importing ${records.length} users...`);
 
           if (options.replace) {
-            await db.delete(users);
+            // Delete existing userData for these users
+            const fids = records.map((r: { fid: number }) => r.fid);
+            if (fids.length > 0) {
+              await db.delete(userData).where(inArray(userData.fid, fids));
+            }
           }
 
           for (const record of records) {
-            await db
-              .insert(users)
-              .values({
+            const userDataRecords = [];
+
+            // Convert user record to userData records
+            if (record.username) {
+              userDataRecords.push({
+                hash: `${record.fid}-username-${Date.now()}`,
                 fid: record.fid,
-                username: record.username,
-                displayName: record.displayName,
-                pfpUrl: record.pfpUrl,
-                bio: record.bio,
-                custodyAddress: record.custodyAddress,
-                syncedAt: new Date(record.syncedAt),
-              })
-              .onConflictDoUpdate({
-                target: users.fid,
-                set: {
-                  username: record.username,
-                  displayName: record.displayName,
-                  pfpUrl: record.pfpUrl,
-                  bio: record.bio,
-                  custodyAddress: record.custodyAddress,
-                  syncedAt: new Date(record.syncedAt),
-                },
+                type: "username",
+                value: record.username,
+                timestamp: new Date(record.syncedAt || Date.now()),
               });
+            }
+
+            if (record.displayName) {
+              userDataRecords.push({
+                hash: `${record.fid}-display-${Date.now()}`,
+                fid: record.fid,
+                type: "display",
+                value: record.displayName,
+                timestamp: new Date(record.syncedAt || Date.now()),
+              });
+            }
+
+            if (record.pfpUrl) {
+              userDataRecords.push({
+                hash: `${record.fid}-pfp-${Date.now()}`,
+                fid: record.fid,
+                type: "pfp",
+                value: record.pfpUrl,
+                timestamp: new Date(record.syncedAt || Date.now()),
+              });
+            }
+
+            if (record.bio) {
+              userDataRecords.push({
+                hash: `${record.fid}-bio-${Date.now()}`,
+                fid: record.fid,
+                type: "bio",
+                value: record.bio,
+                timestamp: new Date(record.syncedAt || Date.now()),
+              });
+            }
+
+            if (record.custodyAddress) {
+              userDataRecords.push({
+                hash: `${record.fid}-ethereum_address-${Date.now()}`,
+                fid: record.fid,
+                type: "ethereum_address",
+                value: record.custodyAddress,
+                timestamp: new Date(record.syncedAt || Date.now()),
+              });
+            }
+
+            // Insert userData records
+            for (const userDataRecord of userDataRecords) {
+              await db
+                .insert(userData)
+                .values(userDataRecord)
+                .onConflictDoNothing();
+            }
           }
         }
       }

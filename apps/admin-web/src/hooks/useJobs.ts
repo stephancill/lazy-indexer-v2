@@ -74,19 +74,19 @@ export const useJobStats = () => {
 
       // Calculate totals from all queues
       const jobsData = response.jobs || {};
-      const totals = Object.values(jobsData).reduce(
+      const totals = Object.values(jobsData).reduce<{
+        active: number;
+        waiting: number;
+        completed: number;
+        failed: number;
+      }>(
         (acc, queue) => ({
           active: acc.active + (queue.active || 0),
           waiting: acc.waiting + (queue.waiting || 0),
           completed: acc.completed + (queue.completed || 0),
           failed: acc.failed + (queue.failed || 0),
         }),
-        { active: 0, waiting: 0, completed: 0, failed: 0 } as {
-          active: number;
-          waiting: number;
-          completed: number;
-          failed: number;
-        }
+        { active: 0, waiting: 0, completed: 0, failed: 0 }
       );
 
       return {
