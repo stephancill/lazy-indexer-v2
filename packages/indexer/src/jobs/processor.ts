@@ -311,7 +311,7 @@ export class ProcessorWorker {
       }
     }
 
-    // Handle user data batch (requires special processing)
+    // Handle user data batch (materialized view will aggregate automatically)
     if (this.pendingUserData.length > 0) {
       try {
         // Insert user data records
@@ -323,8 +323,8 @@ export class ProcessorWorker {
           onConflictDoNothing: true,
         });
 
-        // Update user profiles
-        await this.batchUpdateUserProfiles(this.pendingUserData);
+        // Refresh users materialized view to reflect new data
+        await this.refreshUsersView();
 
         console.log(
           `Batch processed ${this.pendingUserData.length} user data records`
@@ -337,55 +337,12 @@ export class ProcessorWorker {
     }
   }
 
-  private async batchUpdateUserProfiles(userData: any[]): Promise<void> {
-    // Group user data by FID to aggregate updates
-    const userUpdates = new Map<number, any>();
-
-    for (const { message } of userData) {
-      const fid = message.data.fid;
-      const userDataBody = message.data.userDataBody;
-
-      if (!userUpdates.has(fid)) {
-        userUpdates.set(fid, { fid, syncedAt: new Date() });
-      }
-
-      const updateData = userUpdates.get(fid);
-      if (!updateData) {
-        console.warn(`No update data found for fid: ${fid}`);
-        continue;
-      }
-
-      const userDataTypeString = userDataTypeToString(userDataBody.type);
-
-      switch (userDataTypeString) {
-        case "pfp":
-          updateData.pfpUrl = userDataBody.value;
-          break;
-        case "display":
-          updateData.displayName = userDataBody.value;
-          break;
-        case "bio":
-          updateData.bio = userDataBody.value;
-          break;
-        case "username":
-          updateData.username = userDataBody.value;
-          break;
-      }
-    }
-
-    // Batch update user profiles
-    for (const updateData of userUpdates.values()) {
-      try {
-        await db.insert(schema.users).values(updateData).onConflictDoUpdate({
-          target: schema.users.fid,
-          set: updateData,
-        });
-      } catch (error) {
-        console.error(
-          `Failed to update user profile for FID ${updateData.fid}:`,
-          error
-        );
-      }
+  private async refreshUsersView(): Promise<void> {
+    try {
+      await db.refreshMaterializedView(schema.users);
+      console.log("Successfully refreshed users materialized view");
+    } catch (error) {
+      console.error("Failed to refresh users materialized view:", error);
     }
   }
 

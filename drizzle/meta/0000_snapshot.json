@@ -1,5 +1,5 @@
 {
-  "id": "a38eda23-45df-410d-8cf0-91f7a53bc8b9",
+  "id": "9f265642-7c3d-4a3a-9371-bd446dbdc3ef",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -718,74 +718,6 @@
           "name": "username_proofs_timestamp_idx",
           "columns": [
             "timestamp"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
-    "users": {
-      "name": "users",
-      "schema": "",
-      "columns": {
-        "fid": {
-          "name": "fid",
-          "type": "integer",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "username": {
-          "name": "username",
-          "type": "varchar(100)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "pfp_url": {
-          "name": "pfp_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "bio": {
-          "name": "bio",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "custody_address": {
-          "name": "custody_address",
-          "type": "varchar(42)",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "synced_at": {
-          "name": "synced_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "users_username_idx": {
-          "name": "users_username_idx",
-          "columns": [
-            "username"
-          ],
-          "isUnique": false
-        },
-        "users_synced_at_idx": {
-          "name": "users_synced_at_idx",
-          "columns": [
-            "synced_at"
           ],
           "isUnique": false
         }

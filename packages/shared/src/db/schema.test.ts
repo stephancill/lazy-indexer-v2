@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { getTestDb, closeTestDb } from "./index.js";
 import { schema } from "./schema.js";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 describe("Database Schema", () => {
   const testDb = getTestDb();
@@ -16,7 +16,7 @@ describe("Database Schema", () => {
     await testDb.delete(schema.links);
     await testDb.delete(schema.reactions);
     await testDb.delete(schema.casts);
-    await testDb.delete(schema.users);
+    // Note: Cannot delete from users table as it's now a materialized view
     await testDb.delete(schema.targetClients);
     await testDb.delete(schema.targets);
   });
@@ -35,7 +35,7 @@ describe("Database Schema", () => {
     await testDb.delete(schema.links);
     await testDb.delete(schema.reactions);
     await testDb.delete(schema.casts);
-    await testDb.delete(schema.users);
+    // Note: Cannot delete from users table as it's now a materialized view
     await testDb.delete(schema.targetClients);
     await testDb.delete(schema.targets);
   });
@@ -87,20 +87,53 @@ describe("Database Schema", () => {
     });
   });
 
-  describe("Users Table", () => {
-    it("should insert and retrieve users", async () => {
-      const user = {
-        fid: 1,
-        username: "testuser",
-        displayName: "Test User",
-        pfpUrl: "https://example.com/pfp.jpg",
-        bio: "Test bio",
-        custodyAddress: "0x1234567890abcdef1234567890abcdef12345678",
-        syncedAt: new Date(),
-      };
+  describe("Users Materialized View", () => {
+    it("should aggregate user data from userData table", async () => {
+      // Insert userData records for a user
+      const userDataRecords = [
+        {
+          hash: "userdata1_username",
+          fid: 1,
+          type: "username",
+          value: "testuser",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_display",
+          fid: 1,
+          type: "display",
+          value: "Test User",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_bio",
+          fid: 1,
+          type: "bio",
+          value: "Test bio",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_pfp",
+          fid: 1,
+          type: "pfp",
+          value: "https://example.com/pfp.jpg",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_eth",
+          fid: 1,
+          type: "ethereum_address",
+          value: "0x1234567890abcdef1234567890abcdef12345678",
+          timestamp: new Date(),
+        },
+      ];
 
-      await testDb.insert(schema.users).values(user);
+      await testDb.insert(schema.userData).values(userDataRecords);
 
+      // Refresh materialized view
+      await testDb.execute(sql`REFRESH MATERIALIZED VIEW users`);
+
+      // Verify materialized view aggregates the data correctly
       const retrieved = await testDb
         .select()
         .from(schema.users)
@@ -109,6 +142,91 @@ describe("Database Schema", () => {
       expect(retrieved).toHaveLength(1);
       expect(retrieved[0].username).toBe("testuser");
       expect(retrieved[0].displayName).toBe("Test User");
+      expect(retrieved[0].bio).toBe("Test bio");
+      expect(retrieved[0].pfpUrl).toBe("https://example.com/pfp.jpg");
+      expect(retrieved[0].custodyAddress).toBe(
+        "0x1234567890abcdef1234567890abcdef12345678"
+      );
+    });
+
+    it("should handle multiple users with different data", async () => {
+      // Insert userData for multiple users
+      const userDataRecords = [
+        {
+          hash: "userdata1_username",
+          fid: 1,
+          type: "username",
+          value: "user1",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_display",
+          fid: 1,
+          type: "display",
+          value: "User One",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata2_username",
+          fid: 2,
+          type: "username",
+          value: "user2",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata2_display",
+          fid: 2,
+          type: "display",
+          value: "User Two",
+          timestamp: new Date(),
+        },
+      ];
+
+      await testDb.insert(schema.userData).values(userDataRecords);
+      await testDb.execute(sql`REFRESH MATERIALIZED VIEW users`);
+
+      const allUsers = await testDb.select().from(schema.users);
+      expect(allUsers).toHaveLength(2);
+
+      const user1 = allUsers.find((u) => u.fid === 1);
+      const user2 = allUsers.find((u) => u.fid === 2);
+
+      expect(user1?.username).toBe("user1");
+      expect(user1?.displayName).toBe("User One");
+      expect(user2?.username).toBe("user2");
+      expect(user2?.displayName).toBe("User Two");
+    });
+
+    it("should use latest values when multiple userData records exist for same type", async () => {
+      // Insert older userData record
+      const olderRecord = {
+        hash: "userdata1_display_old",
+        fid: 1,
+        type: "display",
+        value: "Old Display Name",
+        timestamp: new Date(Date.now() - 10000), // 10 seconds ago
+      };
+
+      // Insert newer userData record
+      const newerRecord = {
+        hash: "userdata1_display_new",
+        fid: 1,
+        type: "display",
+        value: "New Display Name",
+        timestamp: new Date(), // now
+      };
+
+      await testDb.insert(schema.userData).values([olderRecord, newerRecord]);
+      await testDb.execute(sql`REFRESH MATERIALIZED VIEW users`);
+
+      const retrieved = await testDb
+        .select()
+        .from(schema.users)
+        .where(eq(schema.users.fid, 1));
+
+      expect(retrieved).toHaveLength(1);
+      // Should use the newer value due to MAX(timestamp) aggregation
+      expect(retrieved[0].displayName).toBe("New Display Name");
     });
   });
 
@@ -339,13 +457,27 @@ describe("Database Schema", () => {
       }).not.toThrow();
     });
 
-    it("should handle cascade deletes properly", async () => {
-      // Insert a user first
-      await testDb.insert(schema.users).values({
-        fid: 1,
-        username: "testuser",
-        syncedAt: new Date(),
-      });
+    it("should handle related data properly", async () => {
+      // Insert userData records to create a user in the materialized view
+      const userDataRecords = [
+        {
+          hash: "userdata1_username",
+          fid: 1,
+          type: "username",
+          value: "testuser",
+          timestamp: new Date(),
+        },
+        {
+          hash: "userdata1_display",
+          fid: 1,
+          type: "display",
+          value: "Test User",
+          timestamp: new Date(),
+        },
+      ];
+
+      await testDb.insert(schema.userData).values(userDataRecords);
+      await testDb.execute(sql`REFRESH MATERIALIZED VIEW users`);
 
       // Insert a cast for that user
       await testDb.insert(schema.casts).values({
@@ -361,6 +493,8 @@ describe("Database Schema", () => {
 
       expect(users).toHaveLength(1);
       expect(casts).toHaveLength(1);
+      expect(users[0].fid).toBe(1);
+      expect(casts[0].fid).toBe(1);
     });
   });
 });

@@ -233,9 +233,52 @@ export async function seedDevelopmentData() {
       console.log(`✅ Inserted ${clientTargets.length} target clients`);
     }
 
-    // Insert sample users
-    await db.insert(schema.users).values(sampleUsers).onConflictDoNothing();
-    console.log(`✅ Inserted ${sampleUsers.length} users`);
+    // Insert sample users as userData records (users table is now a materialized view)
+    const userDataRecords = sampleUsers.flatMap((user) => [
+      {
+        hash: `userdata_${user.fid}_username_${Date.now()}`,
+        fid: user.fid,
+        type: "username",
+        value: user.username,
+        timestamp: new Date(Date.now() - 259200000), // 3 days ago
+      },
+      {
+        hash: `userdata_${user.fid}_display_${Date.now()}`,
+        fid: user.fid,
+        type: "display",
+        value: user.displayName,
+        timestamp: new Date(Date.now() - 259200000), // 3 days ago
+      },
+      {
+        hash: `userdata_${user.fid}_bio_${Date.now()}`,
+        fid: user.fid,
+        type: "bio",
+        value: user.bio,
+        timestamp: new Date(Date.now() - 259200000), // 3 days ago
+      },
+      {
+        hash: `userdata_${user.fid}_pfp_${Date.now()}`,
+        fid: user.fid,
+        type: "pfp",
+        value: user.pfpUrl,
+        timestamp: new Date(Date.now() - 259200000), // 3 days ago
+      },
+      {
+        hash: `userdata_${user.fid}_ethereum_address_${Date.now()}`,
+        fid: user.fid,
+        type: "ethereum_address",
+        value: user.custodyAddress,
+        timestamp: new Date(Date.now() - 259200000), // 3 days ago
+      },
+    ]);
+
+    await db
+      .insert(schema.userData)
+      .values(userDataRecords)
+      .onConflictDoNothing();
+    console.log(
+      `✅ Inserted ${userDataRecords.length} user data records for ${sampleUsers.length} users`
+    );
 
     // Insert sample casts
     await db.insert(schema.casts).values(sampleCasts).onConflictDoNothing();
@@ -325,7 +368,28 @@ export async function seedTestData() {
     ];
 
     await db.insert(schema.targets).values(testTargets).onConflictDoNothing();
-    await db.insert(schema.users).values(testUsers).onConflictDoNothing();
+    // Insert test users as userData records (users table is now a materialized view)
+    const testUserDataRecords = testUsers.flatMap((user) => [
+      {
+        hash: `test_userdata_${user.fid}_username_${Date.now()}`,
+        fid: user.fid,
+        type: "username",
+        value: user.username,
+        timestamp: new Date(),
+      },
+      {
+        hash: `test_userdata_${user.fid}_display_${Date.now()}`,
+        fid: user.fid,
+        type: "display",
+        value: user.displayName,
+        timestamp: new Date(),
+      },
+    ]);
+
+    await db
+      .insert(schema.userData)
+      .values(testUserDataRecords)
+      .onConflictDoNothing();
 
     console.log("✅ Test data seeded successfully!");
   } catch (error) {
@@ -347,7 +411,8 @@ export async function cleanupData() {
     await db.delete(schema.links);
     await db.delete(schema.reactions);
     await db.delete(schema.casts);
-    await db.delete(schema.users);
+    // Note: Cannot delete from users table as it's now a materialized view
+    // Users data will be cleaned up when userData table is cleaned
     await db.delete(schema.targetClients);
     await db.delete(schema.targets);
 

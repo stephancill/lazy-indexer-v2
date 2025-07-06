@@ -1,5 +1,6 @@
 import {
   pgTable,
+  pgMaterializedView,
   serial,
   integer,
   text,
@@ -11,6 +12,7 @@ import {
   index,
   primaryKey,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 // Targets table - manages the set of FIDs to be indexed
 export const targets = pgTable(
@@ -35,25 +37,27 @@ export const targetClients = pgTable("target_clients", {
   addedAt: timestamp("added_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-// Users table - stores user profile data
-export const users = pgTable(
-  "users",
-  {
-    fid: integer("fid").primaryKey(),
-    username: varchar("username", { length: 100 }),
-    displayName: text("display_name"),
-    pfpUrl: text("pfp_url"),
-    bio: text("bio"),
-    custodyAddress: varchar("custody_address", { length: 42 }),
-    syncedAt: timestamp("synced_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => ({
-    usernameIdx: index("users_username_idx").on(table.username),
-    syncedAtIdx: index("users_synced_at_idx").on(table.syncedAt),
-  })
-);
+// Users materialized view - aggregates user profile data from userData table
+export const users = pgMaterializedView("users", {
+  fid: integer("fid").primaryKey(),
+  username: varchar("username", { length: 100 }),
+  displayName: text("display_name"),
+  pfpUrl: text("pfp_url"),
+  bio: text("bio"),
+  custodyAddress: varchar("custody_address", { length: 42 }),
+  syncedAt: timestamp("synced_at", { withTimezone: true }),
+}).as(sql`
+  SELECT 
+    fid,
+    MAX(CASE WHEN type = 'username' THEN value END) as username,
+    MAX(CASE WHEN type = 'display' THEN value END) as display_name,
+    MAX(CASE WHEN type = 'pfp' THEN value END) as pfp_url,
+    MAX(CASE WHEN type = 'bio' THEN value END) as bio,
+    MAX(CASE WHEN type = 'ethereum_address' THEN value END) as custody_address,
+    MAX(timestamp) as synced_at
+  FROM user_data
+  GROUP BY fid
+`);
 
 // Casts table - stores cast messages
 export const casts = pgTable(
@@ -272,8 +276,16 @@ export type NewTarget = typeof targets.$inferInsert;
 export type TargetClient = typeof targetClients.$inferSelect;
 export type NewTargetClient = typeof targetClients.$inferInsert;
 
-export type User = typeof users.$inferSelect;
-export type NewUser = typeof users.$inferInsert;
+export type User = {
+  fid: number;
+  username: string | null;
+  displayName: string | null;
+  pfpUrl: string | null;
+  bio: string | null;
+  custodyAddress: string | null;
+  syncedAt: Date | null;
+};
+// Note: NewUser type removed since users is now a materialized view (read-only)
 
 export type Cast = typeof casts.$inferSelect;
 export type NewCast = typeof casts.$inferInsert;

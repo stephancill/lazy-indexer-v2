@@ -89,16 +89,6 @@ CREATE TABLE IF NOT EXISTS "username_proofs" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "users" (
-	"fid" integer PRIMARY KEY NOT NULL,
-	"username" varchar(100),
-	"display_name" text,
-	"pfp_url" text,
-	"bio" text,
-	"custody_address" varchar(42),
-	"synced_at" timestamp with time zone DEFAULT now() NOT NULL
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "verifications" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,
@@ -141,8 +131,6 @@ CREATE INDEX IF NOT EXISTS "username_proofs_fid_idx" ON "username_proofs" ("fid"
 CREATE INDEX IF NOT EXISTS "username_proofs_name_idx" ON "username_proofs" ("name");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "username_proofs_owner_idx" ON "username_proofs" ("owner");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "username_proofs_timestamp_idx" ON "username_proofs" ("timestamp");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "users_username_idx" ON "users" ("username");--> statement-breakpoint
-CREATE INDEX IF NOT EXISTS "users_synced_at_idx" ON "users" ("synced_at");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "verifications_fid_idx" ON "verifications" ("fid");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "verifications_address_idx" ON "verifications" ("address");--> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "verifications_protocol_idx" ON "verifications" ("protocol");--> statement-breakpoint

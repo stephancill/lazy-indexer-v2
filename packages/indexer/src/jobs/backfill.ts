@@ -12,7 +12,7 @@ import type {
   UserDataMessage,
   VerificationMessage,
 } from "@farcaster-indexer/shared";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { BackfillJob } from "../queue.js";
 import { addTargetToSet, scheduleBackfillJob } from "../queue.js";
 
@@ -63,49 +63,7 @@ export class BackfillWorker {
         return;
       }
 
-      // Process user data messages and build user profile
-      const profile: any = {
-        fid,
-        syncedAt: new Date(),
-      };
-
-      for (const message of userDataMessages) {
-        if (message.data?.userDataBody) {
-          const { type, value } = message.data.userDataBody;
-
-          switch (type) {
-            case "PFP":
-              profile.pfpUrl = value;
-              break;
-            case "DISPLAY":
-              profile.displayName = value;
-              break;
-            case "BIO":
-              profile.bio = value;
-              break;
-            case "USERNAME":
-              profile.username = value;
-              break;
-          }
-        }
-      }
-
-      // Insert or update user profile
-      await db
-        .insert(schema.users)
-        .values(profile)
-        .onConflictDoUpdate({
-          target: schema.users.fid,
-          set: {
-            username: profile.username,
-            displayName: profile.displayName,
-            pfpUrl: profile.pfpUrl,
-            bio: profile.bio,
-            syncedAt: profile.syncedAt,
-          },
-        });
-
-      // Store individual user data messages
+      // Store individual user data messages (users table is now a materialized view)
       const userDataRecords = userDataMessages.map((message) => ({
         hash: message.hash,
         fid: message.data.fid,
@@ -119,6 +77,9 @@ export class BackfillWorker {
           batchSize: 500,
           onConflictDoNothing: true,
         });
+
+        // Refresh users materialized view to reflect new data
+        await db.execute(sql`REFRESH MATERIALIZED VIEW users`);
       }
 
       console.log(
@@ -179,7 +140,7 @@ export class BackfillWorker {
         hash: message.hash,
         fid: message.data.fid,
         type:
-          message.data.reactionBody?.type === "LIKE"
+          message.data.reactionBody?.type === "REACTION_TYPE_LIKE"
             ? ("like" as const)
             : ("recast" as const),
         targetHash: message.data.reactionBody?.targetCastId?.hash || "",

@@ -81,15 +81,11 @@ export class RealtimeWorker {
     try {
       // Check different event types and their relevance
       switch (event.type) {
-        case "MERGE_MESSAGE":
         case "HUB_EVENT_TYPE_MERGE_MESSAGE":
           return await this.shouldProcessMergeMessage(event);
-        case "MERGE_ON_CHAIN_EVENT":
         case "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT":
           return await this.shouldProcessOnChainEvent(event);
-        case "PRUNE_MESSAGE":
         case "HUB_EVENT_TYPE_PRUNE_MESSAGE":
-        case "REVOKE_MESSAGE":
         case "HUB_EVENT_TYPE_REVOKE_MESSAGE":
           return await this.shouldProcessMessageRemoval(event);
         default:
@@ -200,11 +196,9 @@ export class RealtimeWorker {
   ): Promise<void> {
     try {
       switch (event.type) {
-        case "MERGE_MESSAGE":
         case "HUB_EVENT_TYPE_MERGE_MESSAGE":
           await this.handleMergeMessageExpansion(event);
           break;
-        case "MERGE_ON_CHAIN_EVENT":
         case "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT":
           await this.handleOnChainEventExpansion(event);
           break;

@@ -199,7 +199,7 @@ export type {
   TargetClient,
   NewTargetClient,
   User,
-  NewUser,
+  // Note: NewUser type removed since users is now a materialized view (read-only)
   Cast,
   NewCast,
   Reaction,
