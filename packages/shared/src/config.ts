@@ -84,7 +84,7 @@ export const config: Config = {
     jwtSecret:
       process.env.JWT_SECRET ||
       "your-secret-key-here-change-this-in-production-minimum-32-characters",
-    adminPassword: process.env.ADMIN_PASSWORD || "admin-password-123",
+    adminPassword: process.env.ADMIN_PASSWORD || "admin",
   },
 
   concurrency: {

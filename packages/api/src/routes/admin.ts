@@ -870,26 +870,70 @@ adminRoutes.get("/analytics", async (c) => {
         .where(sql`${casts.timestamp} >= ${monthAgo}`),
     ]);
 
-    // Simplified top targets - just get the first 10 targets with basic info
-    const topTargetsQuery = await db
+    // Get top targets with real user data and statistics
+    // Use a simpler approach to avoid complex subquery aliases
+    const allTargets = await db
       .select({
         fid: targets.fid,
         isRoot: targets.isRoot,
         addedAt: targets.addedAt,
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        syncedAt: users.syncedAt,
       })
       .from(targets)
-      .orderBy(desc(targets.addedAt))
-      .limit(10);
+      .leftJoin(users, eq(targets.fid, users.fid))
+      .limit(50); // Get more than we need, then we'll calculate stats and sort
 
-    // For now, create mock data for top targets to avoid complex queries
-    const topTargets = topTargetsQuery.map((target) => ({
-      fid: target.fid,
-      displayName: `User ${target.fid}`,
-      username: `user${target.fid}`,
-      castCount: Math.floor(Math.random() * 100) + 1,
-      reactionCount: Math.floor(Math.random() * 50) + 1,
-      followerCount: Math.floor(Math.random() * 200) + 1,
-    }));
+    // Calculate statistics for each target
+    const topTargets = await Promise.all(
+      allTargets.map(async (target) => {
+        const [castCountResult, reactionCountResult, followerCountResult] =
+          await Promise.all([
+            db
+              .select({ count: sql<number>`count(*)` })
+              .from(casts)
+              .where(eq(casts.fid, target.fid)),
+            db
+              .select({ count: sql<number>`count(*)` })
+              .from(reactions)
+              .where(eq(reactions.fid, target.fid)),
+            db
+              .select({ count: sql<number>`count(*)` })
+              .from(links)
+              .where(
+                and(eq(links.targetFid, target.fid), eq(links.type, "follow"))
+              ),
+          ]);
+
+        const castCount = Number(castCountResult[0]?.count) || 0;
+        const reactionCount = Number(reactionCountResult[0]?.count) || 0;
+        const followerCount = Number(followerCountResult[0]?.count) || 0;
+        const activityScore =
+          castCount * 3 + reactionCount * 1 + followerCount * 2;
+
+        return {
+          fid: target.fid,
+          displayName: target.displayName || `User ${target.fid}`,
+          username: target.username || null,
+          pfpUrl: target.pfpUrl || null,
+          bio: target.bio || null,
+          castCount: castCount,
+          reactionCount: reactionCount,
+          followerCount: followerCount,
+          activityScore: activityScore,
+          isRoot: target.isRoot,
+          addedAt: target.addedAt,
+          syncedAt: target.syncedAt,
+        };
+      })
+    );
+
+    // Sort by activity score and take top 10
+    topTargets.sort((a, b) => b.activityScore - a.activityScore);
+    const topTargetsResult = topTargets.slice(0, 10);
 
     // Create a simple recent activity array (last 7 days with mock data for now)
     const recentActivity = [];
@@ -920,7 +964,7 @@ adminRoutes.get("/analytics", async (c) => {
         castsThisWeek: Number(castsThisWeek[0]?.count) || 0,
         castsThisMonth: Number(castsThisMonth[0]?.count) || 0,
       },
-      topTargets,
+      topTargets: topTargetsResult,
       recentActivity,
       timestamp: new Date().toISOString(),
     });

@@ -22,9 +22,15 @@ interface AnalyticsData {
     fid: number;
     displayName?: string;
     username?: string;
+    pfpUrl?: string;
+    bio?: string;
     castCount: number;
     reactionCount: number;
     followerCount?: number;
+    activityScore: number;
+    isRoot: boolean;
+    addedAt: string;
+    syncedAt?: string | null;
   }>;
   recentActivity: Array<{
     date: string;

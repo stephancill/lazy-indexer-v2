@@ -225,8 +225,12 @@ const Analytics: React.FC = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Users className="h-5 w-5 mr-2" />
-                Top Targets by Activity
+                Top Targets by Activity Score
               </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Ranked by activity score: Casts × 3 + Reactions × 1 + Followers
+                × 2
+              </p>
             </CardHeader>
             <CardContent>
               {analytics?.topTargets && analytics.topTargets.length > 0 ? (
@@ -234,23 +238,62 @@ const Analytics: React.FC = () => {
                   {analytics.topTargets.slice(0, 10).map((target, index) => (
                     <div
                       key={target.fid}
-                      className="flex items-center justify-between p-3 border rounded-lg"
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg space-y-3 sm:space-y-0"
                     >
                       <div className="flex items-center space-x-4">
                         <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-sm font-bold text-blue-700">
                           {index + 1}
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
+                        {target.pfpUrl ? (
+                          <img
+                            src={target.pfpUrl}
+                            alt={target.displayName || `FID ${target.fid}`}
+                            className="w-12 h-12 rounded-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold">
+                            {target.displayName?.[0] ||
+                              target.fid.toString()[0]}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium text-gray-900 truncate flex items-center">
                             {target.displayName || `FID ${target.fid}`}
+                            <span className="ml-2 px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full">
+                              #{target.fid}
+                            </span>
                           </div>
                           <div className="text-sm text-gray-600">
-                            FID: {target.fid}
-                            {target.username && ` • @${target.username}`}
+                            {target.username && `@${target.username}`}
+                            {target.isRoot && (
+                              <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                                Root
+                              </span>
+                            )}
                           </div>
+                          {target.bio && (
+                            <div className="text-xs text-gray-500 mt-1 line-clamp-2">
+                              {target.bio}
+                            </div>
+                          )}
+                          {target.syncedAt && (
+                            <div className="text-xs text-green-600 mt-1">
+                              Synced:{" "}
+                              {new Date(target.syncedAt).toLocaleDateString()}
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center justify-center sm:justify-end space-x-4 text-sm">
+                        <div className="text-center">
+                          <div className="font-bold text-purple-600">
+                            {formatNumber(target.activityScore)}
+                          </div>
+                          <div className="text-gray-500">Activity</div>
+                        </div>
                         <div className="text-center">
                           <div className="font-bold text-blue-600">
                             {formatNumber(target.castCount)}
