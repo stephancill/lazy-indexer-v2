@@ -6,7 +6,6 @@ import { config } from "../config.js";
 export async function runMigrations() {
   console.log("Starting database migrations...");
 
-  const { execSync } = await import("node:child_process");
   const path = await import("node:path");
 
   try {
@@ -29,18 +28,19 @@ export async function runMigrations() {
 
     console.log(`Running migrations from project root: ${projectRoot}`);
 
-    // Use drizzle-kit up:pg command to run migrations
-    const migrateCommand = "npx drizzle-kit up:pg";
-    console.log(`Executing: ${migrateCommand}`);
+    // Use drizzle-orm migrate function directly
+    const migrationFolder = path.join(projectRoot, "drizzle");
+    console.log(`Using migration folder: ${migrationFolder}`);
 
-    execSync(migrateCommand, {
-      cwd: projectRoot,
-      stdio: "inherit",
-      env: {
-        ...process.env,
-        DATABASE_URL: config.postgres.connectionString,
-      },
+    const client = postgres(config.postgres.connectionString, {
+      max: 1,
     });
+
+    const db = drizzle(client);
+
+    await migrate(db, { migrationsFolder: migrationFolder });
+
+    await client.end();
 
     console.log("Database migrations completed successfully!");
   } catch (error) {
@@ -55,13 +55,10 @@ export async function createMigration(name: string) {
   try {
     console.log(`Creating migration: ${name}`);
 
-    // Generate migration using drizzle-kit
-    execSync(
-      "npx drizzle-kit generate:pg --out drizzle --schema packages/shared/src/db/schema.ts",
-      {
-        stdio: "inherit",
-      }
-    );
+    // Generate migration using drizzle-kit with config file
+    execSync("npx drizzle-kit generate:pg --config ./drizzle.config.ts", {
+      stdio: "inherit",
+    });
 
     console.log("Migration created successfully!");
   } catch (error) {
@@ -171,8 +168,8 @@ export async function checkDatabaseConnection() {
       console.log("Database connection successful!");
       return true;
     }
-      console.error("Database connection test failed: unexpected result");
-      return false;
+    console.error("Database connection test failed: unexpected result");
+    return false;
   } catch (error) {
     console.error("Database connection failed:", error);
     return false;
