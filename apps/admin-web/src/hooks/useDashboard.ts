@@ -36,10 +36,10 @@ export const useDashboardStats = () => {
       const totalJobs = Object.values(queuesData).reduce(
         (acc, queue) => {
           return {
-            active: acc.active + (queue.active || 0),
-            waiting: acc.waiting + (queue.waiting || 0),
-            completed: acc.completed + (queue.completed || 0),
-            failed: acc.failed + (queue.failed || 0),
+            active: (acc.active || 0) + (queue.active || 0),
+            waiting: (acc.waiting || 0) + (queue.waiting || 0),
+            completed: (acc.completed || 0) + (queue.completed || 0),
+            failed: (acc.failed || 0) + (queue.failed || 0),
           };
         },
         { active: 0, waiting: 0, completed: 0, failed: 0 }
@@ -58,10 +58,10 @@ export const useDashboardStats = () => {
           total: Number.parseInt(statsData.targets?.clients || "0"),
         },
         jobs: {
-          active: totalJobs.active,
-          waiting: totalJobs.waiting,
-          completed: totalJobs.completed,
-          failed: totalJobs.failed,
+          active: totalJobs.active || 0,
+          waiting: totalJobs.waiting || 0,
+          completed: totalJobs.completed || 0,
+          failed: totalJobs.failed || 0,
         },
         system: {
           status: "healthy" as const,

@@ -12,6 +12,8 @@ export {
   clearQueue,
   initializeTargetSets,
   shutdown,
+  hasBackfillJobPending,
+  getBackfillJobsStatus,
 } from "./queue.js";
 
 export { indexer } from "./index.js";

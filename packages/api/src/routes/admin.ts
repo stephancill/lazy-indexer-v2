@@ -24,6 +24,7 @@ import {
   pauseQueue,
   resumeQueue,
   clearQueue,
+  getBackfillJobsStatus,
 } from "@farcaster-indexer/indexer";
 
 const { targets, targetClients, casts, users, links, reactions } = schema;
@@ -109,6 +110,20 @@ adminRoutes.get("/targets", async (c) => {
       offset: offset,
     });
 
+    // Get backfill job status for all targets
+    const targetFids = allTargets.map((t) => t.fid);
+    const jobStatuses = await getBackfillJobsStatus(targetFids);
+
+    // Enhance targets with sync status
+    const enhancedTargets = allTargets.map((target) => ({
+      ...target,
+      syncStatus: target.lastSyncedAt
+        ? "synced"
+        : jobStatuses[target.fid]
+        ? "waiting"
+        : "unsynced",
+    }));
+
     // Get total count for pagination
     const totalCount = await db
       .select({ count: sql<number>`count(*)` })
@@ -143,8 +158,14 @@ adminRoutes.get("/targets", async (c) => {
         ),
     ]);
 
+    // Count waiting targets
+    const waitingTargets = enhancedTargets.filter(
+      (t) => t.syncStatus === "waiting"
+    );
+    const waitingCount = waitingTargets.length;
+
     return c.json({
-      targets: allTargets,
+      targets: enhancedTargets,
       pagination: {
         limit,
         offset,
@@ -154,7 +175,8 @@ adminRoutes.get("/targets", async (c) => {
       summary: {
         total: totalCount[0]?.count || 0,
         synced: syncedCount[0]?.count || 0,
-        unsynced: unsyncedCount[0]?.count || 0,
+        unsynced: (unsyncedCount[0]?.count || 0) - waitingCount,
+        waiting: waitingCount,
         root: rootCount[0]?.count || 0,
       },
       filters: {

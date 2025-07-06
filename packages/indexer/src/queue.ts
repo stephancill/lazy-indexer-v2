@@ -224,6 +224,56 @@ export async function getAllQueueStats(): Promise<JobStats[]> {
   return stats.filter((s) => s !== null) as JobStats[];
 }
 
+export async function hasBackfillJobPending(fid: number): Promise<boolean> {
+  try {
+    const jobId = `backfill-${fid}`;
+    const job = await backfillQueue.getJob(jobId);
+
+    if (!job) {
+      return false;
+    }
+
+    // Check if the job is in waiting, active, or delayed state
+    const state = await job.getState();
+    return state === "waiting" || state === "active" || state === "delayed";
+  } catch (error) {
+    console.error(`Error checking backfill job status for FID ${fid}:`, error);
+    return false;
+  }
+}
+
+export async function getBackfillJobsStatus(
+  fids: number[]
+): Promise<Record<number, boolean>> {
+  try {
+    const jobIds = fids.map((fid) => `backfill-${fid}`);
+    const jobs = await Promise.all(
+      jobIds.map((jobId) => backfillQueue.getJob(jobId))
+    );
+
+    const statuses: Record<number, boolean> = {};
+
+    await Promise.all(
+      jobs.map(async (job, index) => {
+        const fid = fids[index];
+        if (!job) {
+          statuses[fid] = false;
+          return;
+        }
+
+        const state = await job.getState();
+        statuses[fid] =
+          state === "waiting" || state === "active" || state === "delayed";
+      })
+    );
+
+    return statuses;
+  } catch (error) {
+    console.error("Error checking backfill jobs status:", error);
+    return {};
+  }
+}
+
 function getQueue(queueName: string) {
   switch (queueName) {
     case "backfill":

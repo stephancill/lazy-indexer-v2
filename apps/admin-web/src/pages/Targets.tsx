@@ -17,6 +17,7 @@ import {
   XCircle,
   Crown,
   User,
+  Clock,
 } from "lucide-react";
 import {
   useTargets,
@@ -210,12 +211,19 @@ const Targets: React.FC = () => {
                             Root
                           </Badge>
                         )}
-                        {target.lastSyncedAt ? (
+                        {target.syncStatus === "synced" && (
                           <Badge className="bg-green-100 text-green-800">
                             <CheckCircle className="h-3 w-3 mr-1" />
                             Synced
                           </Badge>
-                        ) : (
+                        )}
+                        {target.syncStatus === "waiting" && (
+                          <Badge className="bg-blue-100 text-blue-800">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Waiting
+                          </Badge>
+                        )}
+                        {target.syncStatus === "unsynced" && (
                           <Badge className="bg-red-100 text-red-800">
                             <XCircle className="h-3 w-3 mr-1" />
                             Unsynced
@@ -237,7 +245,7 @@ const Targets: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    {!target.lastSyncedAt && (
+                    {target.syncStatus === "unsynced" && (
                       <Button
                         variant="outline"
                         onClick={() => handleBackfill(target.fid)}

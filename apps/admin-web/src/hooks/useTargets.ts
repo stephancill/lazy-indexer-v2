@@ -12,6 +12,30 @@ interface TargetsParams {
 
 interface TargetsResponse {
   targets: Target[];
+  pagination: {
+    limit: number;
+    offset: number;
+    total: number;
+    hasMore: boolean;
+  };
+  summary: {
+    total: number;
+    synced: number;
+    unsynced: number;
+    waiting: number;
+    root: number;
+  };
+  filters: {
+    search: string;
+    isRoot: string;
+    syncStatus: string;
+    sortBy: string;
+    sortOrder: string;
+  };
+}
+
+interface FrontendTargetsResponse {
+  targets: Target[];
   total: number;
   totalPages: number;
   page: number;
@@ -21,9 +45,22 @@ interface TargetsResponse {
 export const useTargets = (params: TargetsParams = {}) => {
   return useQuery({
     queryKey: ["targets", params],
-    queryFn: async (): Promise<TargetsResponse> => {
+    queryFn: async (): Promise<FrontendTargetsResponse> => {
       const response = await api.admin.targets.list(params);
-      return response as TargetsResponse;
+      const data = response as TargetsResponse;
+
+      // Convert backend pagination to frontend format
+      const limit = params.limit || 20;
+      const page = params.page || 1;
+      const totalPages = Math.ceil(data.pagination.total / limit);
+
+      return {
+        targets: data.targets,
+        total: data.pagination.total,
+        totalPages,
+        page,
+        limit,
+      };
     },
   });
 };
@@ -60,7 +97,10 @@ export const useUpdateTarget = () => {
     mutationFn: async ({
       fid,
       data,
-    }: { fid: number; data: { isRoot?: boolean } }) => {
+    }: {
+      fid: number;
+      data: { isRoot?: boolean };
+    }) => {
       return api.admin.targets.update(fid, data);
     },
     onSuccess: (_, { fid }) => {

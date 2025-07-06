@@ -81,12 +81,32 @@ export const api = {
         search?: string;
         unsynced?: boolean;
         isRoot?: boolean;
-      }) =>
-        apiClient.get(
-          `/api/admin/targets?${new URLSearchParams(
-            params as Record<string, string>
-          ).toString()}`
-        ),
+      }) => {
+        const searchParams = new URLSearchParams();
+
+        if (params?.limit) {
+          searchParams.append("limit", params.limit.toString());
+        }
+        if (params?.page) {
+          // Convert page to offset for backend
+          const offset = (params.page - 1) * (params.limit || 20);
+          searchParams.append("offset", offset.toString());
+        }
+        if (params?.search) {
+          searchParams.append("search", params.search);
+        }
+        if (params?.unsynced) {
+          searchParams.append("sync_status", "unsynced");
+        }
+        if (params?.isRoot !== undefined) {
+          searchParams.append("is_root", params.isRoot.toString());
+        }
+
+        const queryString = searchParams.toString();
+        return apiClient.get(
+          `/api/admin/targets${queryString ? `?${queryString}` : ""}`
+        );
+      },
       get: (fid: number) => apiClient.get(`/api/admin/targets/${fid}`),
       create: (data: { fid: number; isRoot: boolean }) =>
         apiClient.post("/api/admin/targets", data),

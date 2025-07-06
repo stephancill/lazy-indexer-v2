@@ -5,6 +5,7 @@ export interface Target {
   isRoot: boolean;
   addedAt: string;
   lastSyncedAt: string | null;
+  syncStatus: "synced" | "unsynced" | "waiting";
   username?: string;
   displayName?: string;
   pfpUrl?: string;
