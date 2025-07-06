@@ -8,7 +8,7 @@ import {
   scheduleBackfillJob,
   scheduleEventProcessing,
 } from "../queue.js";
-import type { FarcasterEvent } from "@farcaster-indexer/shared";
+import type { FarcasterHttpEvent } from "@farcaster-indexer/shared";
 
 export class RealtimeWorker {
   private hubClient: HubClient;
@@ -75,7 +75,9 @@ export class RealtimeWorker {
     }
   }
 
-  private async shouldProcessEvent(event: FarcasterEvent): Promise<boolean> {
+  private async shouldProcessEvent(
+    event: FarcasterHttpEvent
+  ): Promise<boolean> {
     try {
       // Check different event types and their relevance
       switch (event.type) {
@@ -103,7 +105,7 @@ export class RealtimeWorker {
   }
 
   private async shouldProcessMergeMessage(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<boolean> {
     const message = event.mergeMessageBody?.message;
     if (!message) return false;
@@ -152,7 +154,7 @@ export class RealtimeWorker {
   }
 
   private async shouldProcessOnChainEvent(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<boolean> {
     const onChainEvent = event.mergeOnChainEventBody?.onChainEvent;
     if (!onChainEvent) return false;
@@ -175,7 +177,7 @@ export class RealtimeWorker {
   }
 
   private async shouldProcessMessageRemoval(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<boolean> {
     const message =
       event.pruneMessageBody?.message || event.revokeMessageBody?.message;
@@ -185,7 +187,7 @@ export class RealtimeWorker {
     return await isTargetInSet(messageFid);
   }
 
-  private async processEvent(event: FarcasterEvent): Promise<void> {
+  private async processEvent(event: FarcasterHttpEvent): Promise<void> {
     // Schedule the event for processing in a separate queue
     await scheduleEventProcessing(event);
 
@@ -194,7 +196,7 @@ export class RealtimeWorker {
   }
 
   private async handleDynamicTargetExpansion(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<void> {
     try {
       switch (event.type) {
@@ -216,7 +218,7 @@ export class RealtimeWorker {
   }
 
   private async handleMergeMessageExpansion(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<void> {
     const message = event.mergeMessageBody?.message;
     if (!message) return;
@@ -253,7 +255,7 @@ export class RealtimeWorker {
   }
 
   private async handleOnChainEventExpansion(
-    event: FarcasterEvent
+    event: FarcasterHttpEvent
   ): Promise<void> {
     const onChainEvent = event.mergeOnChainEventBody?.onChainEvent;
     if (!onChainEvent) return;

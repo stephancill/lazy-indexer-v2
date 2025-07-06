@@ -2,9 +2,46 @@ import { db, schema, batchInsert } from "@farcaster-indexer/shared";
 import { eq } from "drizzle-orm";
 import type { ProcessEventJob } from "../queue.js";
 import type {
-  FarcasterEvent,
-  FarcasterMessage,
+  FarcasterHttpEvent,
+  FarcasterHttpMessage,
 } from "@farcaster-indexer/shared";
+import {
+  Message,
+  MessageType,
+  ReactionType,
+  UserDataType,
+} from "@farcaster/core";
+import { bytesToHex } from "viem";
+
+// Helper function to convert UserDataType enum to human-readable string
+function userDataTypeToString(type: UserDataType): string {
+  switch (type) {
+    case UserDataType.PFP:
+      return "pfp";
+    case UserDataType.DISPLAY:
+      return "display";
+    case UserDataType.BIO:
+      return "bio";
+    case UserDataType.USERNAME:
+      return "username";
+    case UserDataType.URL:
+      return "url";
+    case UserDataType.LOCATION:
+      return "location";
+    case UserDataType.TWITTER:
+      return "twitter";
+    case UserDataType.GITHUB:
+      return "github";
+    case UserDataType.BANNER:
+      return "banner";
+    case UserDataType.USER_DATA_PRIMARY_ADDRESS_ETHEREUM:
+      return "ethereum_address";
+    case UserDataType.USER_DATA_PRIMARY_ADDRESS_SOLANA:
+      return "solana_address";
+    default:
+      return "unknown";
+  }
+}
 
 export class ProcessorWorker {
   private pendingCasts: any[] = [];
@@ -31,23 +68,19 @@ export class ProcessorWorker {
     }
   }
 
-  private async addToBatch(event: FarcasterEvent): Promise<void> {
+  private async addToBatch(event: FarcasterHttpEvent): Promise<void> {
     switch (event.type) {
-      case "MERGE_MESSAGE":
       case "HUB_EVENT_TYPE_MERGE_MESSAGE":
         await this.addMessageToBatch(event);
         break;
-      case "MERGE_ON_CHAIN_EVENT":
       case "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT":
         await this.addOnChainEventToBatch(event);
         break;
-      case "PRUNE_MESSAGE":
       case "HUB_EVENT_TYPE_PRUNE_MESSAGE":
-        await this.processPruneMessage(event); // Handle immediately
+        await this.processPruneMessage(event);
         break;
-      case "REVOKE_MESSAGE":
       case "HUB_EVENT_TYPE_REVOKE_MESSAGE":
-        await this.processRevokeMessage(event); // Handle immediately
+        await this.processRevokeMessage(event);
         break;
       default:
         console.log(`Unknown event type: ${event.type}`);
@@ -57,52 +90,57 @@ export class ProcessorWorker {
     await this.checkAndFlushBatches();
   }
 
-  private async addMessageToBatch(event: FarcasterEvent): Promise<void> {
-    const message = event.mergeMessageBody?.message;
-    if (!message) return;
+  private async addMessageToBatch(event: FarcasterHttpEvent): Promise<void> {
+    const httpMessage = event.mergeMessageBody?.message;
+    if (!httpMessage) return;
+    const parsedMessage = Message.fromJSON(httpMessage);
 
-    switch (message.data.type) {
-      case "MESSAGE_TYPE_CAST_ADD":
-        this.addCastToBatch(message);
+    switch (parsedMessage.data?.type) {
+      case MessageType.CAST_ADD:
+        this.addCastToBatch(parsedMessage);
         break;
-      case "MESSAGE_TYPE_CAST_REMOVE":
-        await this.processCastRemove(message); // Handle immediately
+      case MessageType.CAST_REMOVE:
+        await this.processCastRemove(parsedMessage); // Handle immediately
         break;
-      case "MESSAGE_TYPE_REACTION_ADD":
-        this.addReactionToBatch(message);
+      case MessageType.REACTION_ADD:
+        this.addReactionToBatch(parsedMessage);
         break;
-      case "MESSAGE_TYPE_REACTION_REMOVE":
-        await this.processReactionRemove(message); // Handle immediately
+      case MessageType.REACTION_REMOVE:
+        await this.processReactionRemove(parsedMessage); // Handle immediately
         break;
-      case "MESSAGE_TYPE_LINK_ADD":
-        this.addLinkToBatch(message);
+      case MessageType.LINK_ADD:
+        this.addLinkToBatch(parsedMessage);
         break;
-      case "MESSAGE_TYPE_LINK_REMOVE":
-        await this.processLinkRemove(message); // Handle immediately
+      case MessageType.LINK_REMOVE:
+        await this.processLinkRemove(parsedMessage); // Handle immediately
         break;
-      case "MESSAGE_TYPE_VERIFICATION_ADD_ETH_ADDRESS":
-        this.addVerificationToBatch(message);
+      case MessageType.VERIFICATION_ADD_ETH_ADDRESS:
+        this.addVerificationToBatch(parsedMessage);
         break;
-      case "MESSAGE_TYPE_VERIFICATION_REMOVE":
-        await this.processVerificationRemove(message); // Handle immediately
+      case MessageType.VERIFICATION_REMOVE:
+        await this.processVerificationRemove(parsedMessage); // Handle immediately
         break;
-      case "MESSAGE_TYPE_USER_DATA_ADD":
-        this.addUserDataToBatch(message);
+      case MessageType.USER_DATA_ADD:
+        this.addUserDataToBatch(parsedMessage);
         break;
       default:
-        console.log(`Unknown message type: ${message.data.type}`);
+        console.log(`Unknown message type: ${parsedMessage.data?.type}`);
     }
   }
 
-  private addCastToBatch(message: FarcasterMessage): void {
+  private addCastToBatch(message: Message): void {
+    if (!message.data) return;
+
     const castData = message.data.castAddBody;
     if (!castData) return;
 
     this.pendingCasts.push({
-      hash: message.hash,
+      hash: bytesToHex(message.hash),
       fid: message.data.fid,
       text: castData.text,
-      parentHash: castData.parentCastId?.hash || null,
+      parentHash: castData.parentCastId?.hash
+        ? bytesToHex(castData.parentCastId.hash)
+        : null,
       parentFid: castData.parentCastId?.fid || null,
       parentUrl: castData.parentUrl || null,
       timestamp: new Date(message.data.timestamp * 1000),
@@ -110,26 +148,32 @@ export class ProcessorWorker {
     });
   }
 
-  private addReactionToBatch(message: FarcasterMessage): void {
+  private addReactionToBatch(message: Message): void {
+    if (!message.data) return;
+
     const reactionData = message.data.reactionBody;
     if (!reactionData || !reactionData.targetCastId) return;
 
     this.pendingReactions.push({
-      hash: message.hash,
+      hash: bytesToHex(message.hash),
       fid: message.data.fid,
       type:
-        reactionData.type === "LIKE" ? ("like" as const) : ("recast" as const),
-      targetHash: reactionData.targetCastId.hash,
+        reactionData.type === ReactionType.LIKE
+          ? ("like" as const)
+          : ("recast" as const),
+      targetHash: bytesToHex(reactionData.targetCastId.hash),
       timestamp: new Date(message.data.timestamp * 1000),
     });
   }
 
-  private addLinkToBatch(message: FarcasterMessage): void {
+  private addLinkToBatch(message: Message): void {
+    if (!message.data) return;
+
     const linkData = message.data.linkBody;
     if (!linkData) return;
 
     this.pendingLinks.push({
-      hash: message.hash,
+      hash: bytesToHex(message.hash),
       fid: message.data.fid,
       targetFid: linkData.targetFid,
       type: "follow" as const,
@@ -137,12 +181,14 @@ export class ProcessorWorker {
     });
   }
 
-  private addVerificationToBatch(message: FarcasterMessage): void {
-    const verificationData = message.data.verificationAddEthAddressBody;
+  private addVerificationToBatch(message: Message): void {
+    if (!message.data) return;
+
+    const verificationData = message.data.verificationAddAddressBody;
     if (!verificationData) return;
 
     this.pendingVerifications.push({
-      hash: message.hash,
+      hash: bytesToHex(message.hash),
       fid: message.data.fid,
       address: verificationData.address,
       protocol: "ethereum" as const,
@@ -150,23 +196,27 @@ export class ProcessorWorker {
     });
   }
 
-  private addUserDataToBatch(message: FarcasterMessage): void {
+  private addUserDataToBatch(message: Message): void {
+    if (!message.data) return;
+
     const userDataBody = message.data.userDataBody;
     if (!userDataBody) return;
 
     this.pendingUserData.push({
       message,
       userDataRecord: {
-        hash: message.hash,
+        hash: bytesToHex(message.hash),
         fid: message.data.fid,
-        type: userDataBody.type,
+        type: userDataTypeToString(userDataBody.type),
         value: userDataBody.value,
         timestamp: new Date(message.data.timestamp * 1000),
       },
     });
   }
 
-  private async addOnChainEventToBatch(event: FarcasterEvent): Promise<void> {
+  private async addOnChainEventToBatch(
+    event: FarcasterHttpEvent
+  ): Promise<void> {
     const onChainEvent = event.mergeOnChainEventBody?.onChainEvent;
     if (!onChainEvent) return;
 
@@ -294,17 +344,19 @@ export class ProcessorWorker {
         continue;
       }
 
-      switch (userDataBody.type) {
-        case "PFP":
+      const userDataTypeString = userDataTypeToString(userDataBody.type);
+
+      switch (userDataTypeString) {
+        case "pfp":
           updateData.pfpUrl = userDataBody.value;
           break;
-        case "DISPLAY":
+        case "display":
           updateData.displayName = userDataBody.value;
           break;
-        case "BIO":
+        case "bio":
           updateData.bio = userDataBody.value;
           break;
-        case "USERNAME":
+        case "username":
           updateData.username = userDataBody.value;
           break;
       }
@@ -331,80 +383,92 @@ export class ProcessorWorker {
     await this.flushAllBatches();
   }
 
-  private async processPruneMessage(event: FarcasterEvent): Promise<void> {
-    const message = event.pruneMessageBody?.message;
-    if (!message) return;
+  private async processPruneMessage(event: FarcasterHttpEvent): Promise<void> {
+    const httpMessage = event.pruneMessageBody?.message;
+    if (!httpMessage) return;
+
+    const parsedMessage = Message.fromJSON(httpMessage);
 
     // Remove the message from the appropriate table
-    await this.removeMessage(message);
+    await this.removeMessage(parsedMessage);
   }
 
-  private async processRevokeMessage(event: FarcasterEvent): Promise<void> {
-    const message = event.revokeMessageBody?.message;
-    if (!message) return;
+  private async processRevokeMessage(event: FarcasterHttpEvent): Promise<void> {
+    const httpMessage = event.revokeMessageBody?.message;
+    if (!httpMessage) return;
+
+    const parsedMessage = Message.fromJSON(httpMessage);
 
     // Remove the message from the appropriate table
-    await this.removeMessage(message);
+    await this.removeMessage(parsedMessage);
   }
 
-  private async processCastRemove(message: FarcasterMessage): Promise<void> {
+  private async processCastRemove(message: Message): Promise<void> {
+    if (!message.data) return;
+
     const removeData = message.data.castRemoveBody;
     if (!removeData) return;
 
     await db
       .delete(schema.casts)
-      .where(eq(schema.casts.hash, removeData.targetHash));
+      .where(eq(schema.casts.hash, bytesToHex(removeData.targetHash)));
   }
 
-  private async processReactionRemove(
-    message: FarcasterMessage
-  ): Promise<void> {
+  private async processReactionRemove(message: Message): Promise<void> {
+    if (!message.data) return;
+
     const reactionData = message.data.reactionBody;
     if (!reactionData || !reactionData.targetCastId) return;
 
     await db
       .delete(schema.reactions)
-      .where(eq(schema.reactions.hash, message.hash));
+      .where(eq(schema.reactions.hash, bytesToHex(message.hash)));
   }
 
-  private async processLinkRemove(message: FarcasterMessage): Promise<void> {
-    await db.delete(schema.links).where(eq(schema.links.hash, message.hash));
+  private async processLinkRemove(message: Message): Promise<void> {
+    if (!message.data) return;
+
+    await db
+      .delete(schema.links)
+      .where(eq(schema.links.hash, bytesToHex(message.hash)));
   }
 
-  private async processVerificationRemove(
-    message: FarcasterMessage
-  ): Promise<void> {
+  private async processVerificationRemove(message: Message): Promise<void> {
+    if (!message.data) return;
+
     await db
       .delete(schema.verifications)
-      .where(eq(schema.verifications.hash, message.hash));
+      .where(eq(schema.verifications.hash, bytesToHex(message.hash)));
   }
 
-  private async removeMessage(message: FarcasterMessage): Promise<void> {
+  private async removeMessage(message: Message): Promise<void> {
+    if (!message.data) return;
+
     switch (message.data.type) {
-      case "MESSAGE_TYPE_CAST_ADD":
+      case MessageType.CAST_ADD:
         await db
           .delete(schema.casts)
-          .where(eq(schema.casts.hash, message.hash));
+          .where(eq(schema.casts.hash, bytesToHex(message.hash)));
         break;
-      case "MESSAGE_TYPE_REACTION_ADD":
+      case MessageType.REACTION_ADD:
         await db
           .delete(schema.reactions)
-          .where(eq(schema.reactions.hash, message.hash));
+          .where(eq(schema.reactions.hash, bytesToHex(message.hash)));
         break;
-      case "MESSAGE_TYPE_LINK_ADD":
+      case MessageType.LINK_ADD:
         await db
           .delete(schema.links)
-          .where(eq(schema.links.hash, message.hash));
+          .where(eq(schema.links.hash, bytesToHex(message.hash)));
         break;
-      case "MESSAGE_TYPE_VERIFICATION_ADD_ETH_ADDRESS":
+      case MessageType.VERIFICATION_ADD_ETH_ADDRESS:
         await db
           .delete(schema.verifications)
-          .where(eq(schema.verifications.hash, message.hash));
+          .where(eq(schema.verifications.hash, bytesToHex(message.hash)));
         break;
-      case "MESSAGE_TYPE_USER_DATA_ADD":
+      case MessageType.USER_DATA_ADD:
         await db
           .delete(schema.userData)
-          .where(eq(schema.userData.hash, message.hash));
+          .where(eq(schema.userData.hash, bytesToHex(message.hash)));
         break;
       default:
         console.log(`Cannot remove message of type: ${message.data.type}`);

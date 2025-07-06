@@ -99,7 +99,7 @@ export interface TargetClient {
   added_at: Date;
 }
 
-export interface FarcasterMessage {
+export interface FarcasterHttpMessage {
   data: {
     type: string;
     fid: number;
@@ -126,7 +126,7 @@ export interface FarcasterMessage {
       targetHash: string;
     };
     reactionBody?: {
-      type: "LIKE" | "RECAST";
+      type: "REACTION_TYPE_LIKE" | "REACTION_TYPE_RECAST";
       targetCastId?: {
         fid: number;
         hash: string;
@@ -138,7 +138,18 @@ export interface FarcasterMessage {
       targetFid: number;
     };
     userDataBody?: {
-      type: "PFP" | "DISPLAY" | "BIO" | "USERNAME";
+      type:
+        | "USER_DATA_TYPE_PFP"
+        | "USER_DATA_TYPE_DISPLAY"
+        | "USER_DATA_TYPE_BIO"
+        | "USER_DATA_TYPE_USERNAME"
+        | "USER_DATA_TYPE_URL"
+        | "USER_DATA_TYPE_LOCATION"
+        | "USER_DATA_TYPE_TWITTER"
+        | "USER_DATA_TYPE_GITHUB"
+        | "USER_DATA_TYPE_BANNER"
+        | "USER_DATA_TYPE_USER_DATA_PRIMARY_ADDRESS_ETHEREUM"
+        | "USER_DATA_TYPE_USER_DATA_PRIMARY_ADDRESS_SOLANA";
       value: string;
     };
     verificationAddEthAddressBody?: {
@@ -157,28 +168,23 @@ export interface FarcasterMessage {
   signer: string;
 }
 
-export interface FarcasterEvent {
+export interface FarcasterHttpEvent {
   type:
     | "HUB_EVENT_TYPE_MERGE_MESSAGE"
     | "HUB_EVENT_TYPE_PRUNE_MESSAGE"
     | "HUB_EVENT_TYPE_REVOKE_MESSAGE"
-    | "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT"
-    // Keep backwards compatibility
-    | "MERGE_MESSAGE"
-    | "PRUNE_MESSAGE"
-    | "REVOKE_MESSAGE"
-    | "MERGE_ON_CHAIN_EVENT";
+    | "HUB_EVENT_TYPE_MERGE_ON_CHAIN_EVENT";
   id: number;
   fid?: number;
   mergeMessageBody?: {
-    message: FarcasterMessage;
-    deletedMessages: FarcasterMessage[];
+    message: FarcasterHttpMessage;
+    deletedMessages: FarcasterHttpMessage[];
   };
   pruneMessageBody?: {
-    message: FarcasterMessage;
+    message: FarcasterHttpMessage;
   };
   revokeMessageBody?: {
-    message: FarcasterMessage;
+    message: FarcasterHttpMessage;
   };
   mergeOnChainEventBody?: {
     onChainEvent: {
@@ -196,13 +202,13 @@ export interface FarcasterEvent {
       signerEventBody?: {
         key: string;
         keyType: number;
-        eventType: "ADD" | "REMOVE";
+        eventType: "SIGNER_EVENT_TYPE_ADD" | "SIGNER_EVENT_TYPE_REMOVE";
         metadata: string;
         metadataType: number;
       };
       idRegisterEventBody?: {
         to: string;
-        eventType: "REGISTER" | "TRANSFER";
+        eventType: "EVENT_TYPE_ID_REGISTER" | "EVENT_TYPE_ID_TRANSFER";
         from?: string;
         recoveryAddress: string;
       };
@@ -236,7 +242,7 @@ export interface RealtimeSyncJobData extends JobData {
 }
 
 export interface ProcessEventJobData extends JobData {
-  event: FarcasterEvent;
+  event: FarcasterHttpEvent;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -257,12 +263,12 @@ export interface PaginatedEventsResponse<T> {
 }
 
 // Specific message types for hub client
-export type CastMessage = FarcasterMessage;
-export type ReactionMessage = FarcasterMessage;
-export type LinkMessage = FarcasterMessage;
-export type VerificationMessage = FarcasterMessage;
-export type UserDataMessage = FarcasterMessage;
-export type UsernameProofMessage = FarcasterMessage;
+export type CastMessage = FarcasterHttpMessage;
+export type ReactionMessage = FarcasterHttpMessage;
+export type LinkMessage = FarcasterHttpMessage;
+export type VerificationMessage = FarcasterHttpMessage;
+export type UserDataMessage = FarcasterHttpMessage;
+export type UsernameProofMessage = FarcasterHttpMessage;
 export interface OnChainEvent {
   type: string;
   chainId: number;

@@ -18,15 +18,17 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@farcaster-indexer/shared": "workspace:*",
-    "bullmq": "^4.12.0",
     "@bull-board/api": "^5.10.0",
-    "@bull-board/ui": "^5.10.0",
     "@bull-board/hono": "^5.10.0",
+    "@bull-board/ui": "^5.10.0",
+    "@farcaster-indexer/shared": "workspace:*",
+    "@farcaster/core": "^0.18.1",
+    "bullmq": "^4.12.0",
+    "drizzle-kit": "^0.20.4",
+    "drizzle-orm": "^0.29.5",
     "hono": "^3.11.0",
     "ioredis": "^5.3.2",
-    "drizzle-orm": "^0.29.5",
-    "drizzle-kit": "^0.20.4"
+    "viem": "^2.31.7"
   },
   "devDependencies": {
     "@types/node": "^20.8.0",

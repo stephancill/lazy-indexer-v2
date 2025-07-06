@@ -1,8 +1,8 @@
 import { config } from "../config.js";
 import type {
   HubConfig,
-  FarcasterMessage,
-  FarcasterEvent,
+  FarcasterHttpMessage,
+  FarcasterHttpEvent,
   CastMessage,
   ReactionMessage,
   LinkMessage,
@@ -419,7 +419,7 @@ export class HubClient {
       pageSize?: number;
       pageToken?: string;
     } = {}
-  ): Promise<PaginatedEventsResponse<FarcasterEvent>> {
+  ): Promise<PaginatedEventsResponse<FarcasterHttpEvent>> {
     const params = new URLSearchParams();
 
     if (options.fromEventId)
@@ -428,7 +428,7 @@ export class HubClient {
       params.append("pageSize", options.pageSize.toString());
     if (options.pageToken) params.append("pageToken", options.pageToken);
 
-    return this.request<PaginatedEventsResponse<FarcasterEvent>>(
+    return this.request<PaginatedEventsResponse<FarcasterHttpEvent>>(
       `/v1/events?${params}`
     );
   }
