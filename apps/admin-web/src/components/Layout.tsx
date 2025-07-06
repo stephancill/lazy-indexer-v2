@@ -1,5 +1,4 @@
-import type React from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import {
   Home,
@@ -23,12 +22,10 @@ import {
   SidebarInset,
   SidebarSeparator,
 } from "./ui/sidebar";
+import SocialLayout from "./SocialLayout";
+import type { ReactNode } from "react";
 
-interface LayoutProps {
-  children: React.ReactNode;
-}
-
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const AdminLayout = ({ children }: { children: ReactNode }) => {
   const { logout } = useAuth();
 
   const navigation = [
@@ -54,7 +51,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   <div className="flex items-center">
                     <Shield className="h-8 w-8 text-blue-600" />
                     <span className="ml-2 text-xl font-bold text-gray-900">
-                      Farcaster Admin
+                      Lazy Indexer
                     </span>
                   </div>
                 </SidebarMenuButton>
@@ -109,6 +106,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       </SidebarProvider>
     </div>
   );
+};
+
+const Layout = ({ children }: { children: ReactNode }) => {
+  const location = useLocation();
+  const isSocial = location.pathname.startsWith("/social");
+
+  if (isSocial) {
+    return <SocialLayout>{children}</SocialLayout>;
+  }
+
+  return <AdminLayout>{children}</AdminLayout>;
 };
 
 export default Layout;

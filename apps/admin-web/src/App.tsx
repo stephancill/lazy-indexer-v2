@@ -15,6 +15,9 @@ import Targets from "./pages/Targets";
 import ClientTargets from "./pages/ClientTargets";
 import Jobs from "./pages/Jobs";
 import Analytics from "./pages/Analytics";
+import FeedPage from "./pages/social/FeedPage";
+import SearchPage from "./pages/social/SearchPage";
+import ProfilePage from "./pages/social/ProfilePage";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -52,6 +55,14 @@ const App: React.FC = () => {
                       />
                       <Route path="/jobs" element={<Jobs />} />
                       <Route path="/analytics" element={<Analytics />} />
+
+                      {/* Social Client Routes */}
+                      <Route path="/social" element={<FeedPage />} />
+                      <Route path="/social/search" element={<SearchPage />} />
+                      <Route
+                        path="/social/profile/:fid"
+                        element={<ProfilePage />}
+                      />
                     </Routes>
                   </Layout>
                 </ProtectedRoute>
