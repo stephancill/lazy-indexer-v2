@@ -79,6 +79,18 @@ CREATE TABLE IF NOT EXISTS "user_data" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE MATERIALIZED VIEW IF NOT EXISTS "users" AS 
+SELECT 
+  fid,
+  MAX(CASE WHEN type = 'username' THEN value END) as username,
+  MAX(CASE WHEN type = 'display' THEN value END) as display_name,
+  MAX(CASE WHEN type = 'pfp' THEN value END) as pfp_url,
+  MAX(CASE WHEN type = 'bio' THEN value END) as bio,
+  MAX(CASE WHEN type = 'ethereum_address' THEN value END) as custody_address,
+  MAX(timestamp) as synced_at
+FROM user_data
+GROUP BY fid;
+--> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "username_proofs" (
 	"hash" varchar(64) PRIMARY KEY NOT NULL,
 	"fid" integer NOT NULL,

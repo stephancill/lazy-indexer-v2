@@ -1,5 +1,5 @@
 import { db, schema, batchInsert } from "@farcaster-indexer/shared";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { ProcessEventJob } from "../queue.js";
 import type {
   FarcasterHttpEvent,
@@ -339,7 +339,8 @@ export class ProcessorWorker {
 
   private async refreshUsersView(): Promise<void> {
     try {
-      await db.refreshMaterializedView(schema.users);
+      // Use raw SQL to refresh the materialized view
+      await db.execute(sql`REFRESH MATERIALIZED VIEW users`);
       console.log("Successfully refreshed users materialized view");
     } catch (error) {
       console.error("Failed to refresh users materialized view:", error);

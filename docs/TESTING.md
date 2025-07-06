@@ -11,20 +11,24 @@ The project uses [Vitest](https://vitest.dev/) as the testing framework across a
 ### Prerequisites
 
 1. **Docker Services**: Ensure PostgreSQL and Redis test containers are running
+
    ```bash
-   docker-compose up -d
+   # Start test services
+   docker-compose -f docker-compose.test.yml up -d
    ```
 
 2. **Dependencies**: Install all dependencies
+
    ```bash
    bun install
    ```
 
 3. **Database Setup**: Run migrations on both development and test databases
+
    ```bash
    # Development database
    bun run migrate up
-   
+
    # Test database (if needed)
    NODE_ENV=test bun run migrate up
    ```
@@ -76,6 +80,7 @@ bun run test:cli
 ### Package-Specific Testing
 
 #### Shared Package Tests
+
 ```bash
 cd packages/shared
 bun test
@@ -87,6 +92,7 @@ bun test src/config.test.ts
 ```
 
 #### Indexer Package Tests
+
 ```bash
 cd packages/indexer
 bun test
@@ -99,6 +105,7 @@ bun test --run load
 ```
 
 #### API Package Tests
+
 ```bash
 cd packages/api
 bun test
@@ -109,6 +116,7 @@ bun test src/routes/admin.test.ts
 ```
 
 #### CLI Package Tests
+
 ```bash
 cd apps/cli
 bun test
@@ -117,7 +125,9 @@ bun test
 ### Test Categories
 
 #### Unit Tests
+
 Test individual functions and classes in isolation:
+
 ```bash
 # Configuration tests
 bun test src/config.test.ts
@@ -130,7 +140,9 @@ bun test src/libs/hub-client.test.ts
 ```
 
 #### Integration Tests
+
 Test component interactions and end-to-end flows:
+
 ```bash
 # Run integration tests only
 bun test --run integration
@@ -140,7 +152,9 @@ bun test src/integration/full-flow.test.ts
 ```
 
 #### Load Tests
+
 Test performance under simulated load:
+
 ```bash
 # Run load tests only
 bun test --run load
@@ -152,7 +166,9 @@ bun test --run load packages/shared/src/db/
 ## Test Database Management
 
 ### Automatic Setup
+
 Tests automatically:
+
 - Connect to the test database (`postgres_test` on port 5433)
 - Run cleanup before/after each test
 - Handle database migrations
@@ -160,6 +176,7 @@ Tests automatically:
 ### Manual Database Operations
 
 #### Reset Test Database
+
 ```bash
 # Connect to test database container
 docker exec -it farcaster-indexer-bun-postgres-test-1 psql -U postgres -d postgres_test
@@ -172,7 +189,9 @@ TRUNCATE TABLE targets, users, casts, reactions, links, verifications, user_data
 ```
 
 #### Re-run Migrations
+
 If you need to reset the test database schema:
+
 ```bash
 # Copy migration files to container
 docker cp drizzle/0000_cool_sally_floyd.sql farcaster-indexer-bun-postgres-test-1:/tmp/migration.sql
@@ -184,6 +203,7 @@ docker exec farcaster-indexer-bun-postgres-test-1 psql -U postgres -d postgres_t
 ## Understanding Test Output
 
 ### Successful Test Run
+
 ```
 bun test v1.1.38
 
@@ -204,21 +224,27 @@ Ran 65 tests across 3 files. [40.35s]
 ### Common Test Failures
 
 #### Database Connection Issues
+
 ```
 PostgresError: relation "sync_state" does not exist
 ```
+
 **Solution**: Run database migrations on test database
 
 #### Network Timeout Issues
+
 ```
 Test "should handle HTTP errors" timed out after 5001ms
 ```
+
 **Solution**: These are known issues with HubClient mock setup in Bun environment. Tests are functionally correct.
 
 #### Environment Issues
+
 ```
 error: Test database not configured
 ```
+
 **Solution**: Ensure `NODE_ENV=test` and `TEST_DATABASE_URL` are set
 
 ## Test Architecture
@@ -226,6 +252,7 @@ error: Test database not configured
 ### Shared Testing Utilities
 
 Located in `packages/shared/test/`:
+
 - `setup.ts`: Global test configuration and database setup
 - `mocks/`: Mock implementations for external services
 - `fixtures/`: Test data fixtures
@@ -233,11 +260,13 @@ Located in `packages/shared/test/`:
 ### Mock Strategy
 
 #### Database Mocking
+
 - Uses real test database for integration fidelity
 - Automatic cleanup between tests
 - Isolated test data
 
 #### External API Mocking
+
 ```typescript
 // Hub client tests use dependency injection
 const mockFetch = vi.fn();
@@ -245,29 +274,37 @@ const hubClient = new HubClient(configs, mockFetch);
 
 // Real Farcaster hub responses for realistic mocking
 const MOCK_RESPONSES = {
-  hubInfo: { /* real hub.merv.fun response */ },
-  events: { /* real events response */ },
+  hubInfo: {
+    /* real hub.merv.fun response */
+  },
+  events: {
+    /* real events response */
+  },
   // ...
 };
 ```
 
 #### Redis Mocking
+
 - Uses separate Redis instance (port 6380)
 - Automatic cleanup between tests
 
 ### Test Patterns
 
 #### Database Tests
+
 ```typescript
-describe('Database Operations', () => {
+describe("Database Operations", () => {
   beforeEach(async () => {
     // Cleanup handled automatically by test setup
   });
 
-  it('should insert and retrieve data', async () => {
-    const testData = { /* ... */ };
+  it("should insert and retrieve data", async () => {
+    const testData = {
+      /* ... */
+    };
     await db.insert(table).values(testData);
-    
+
     const result = await db.select().from(table);
     expect(result[0]).toMatchObject(testData);
   });
@@ -275,15 +312,16 @@ describe('Database Operations', () => {
 ```
 
 #### API Tests
+
 ```typescript
-describe('API Endpoints', () => {
-  it('should return expected response', async () => {
-    const response = await app.request('/api/endpoint');
-    
+describe("API Endpoints", () => {
+  it("should return expected response", async () => {
+    const response = await app.request("/api/endpoint");
+
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       success: true,
-      data: expect.any(Object)
+      data: expect.any(Object),
     });
   });
 });
@@ -292,6 +330,7 @@ describe('API Endpoints', () => {
 ## Performance Testing
 
 ### Database Benchmarks
+
 ```bash
 # Run database performance tests
 bun test --run load packages/shared/src/db/
@@ -301,6 +340,7 @@ bun test src/db/benchmarks.test.ts
 ```
 
 ### API Load Testing
+
 ```bash
 # Run API performance tests
 bun test --run load packages/api/
@@ -309,6 +349,7 @@ bun test --run load packages/api/
 ## Debugging Tests
 
 ### Verbose Output
+
 ```bash
 # Run with detailed output
 bun test --reporter=verbose
@@ -318,6 +359,7 @@ bun test --reporter=verbose src/specific-test.test.ts
 ```
 
 ### Database Debugging
+
 ```bash
 # Check test database state
 docker exec farcaster-indexer-bun-postgres-test-1 psql -U postgres -d postgres_test -c "SELECT COUNT(*) FROM targets;"
@@ -327,6 +369,7 @@ bun test --reporter=verbose | grep -A 5 -B 5 "Database"
 ```
 
 ### Network Debugging
+
 ```bash
 # Test hub connectivity
 curl -s "https://hub.merv.fun/v1/info" | jq .
@@ -338,22 +381,25 @@ bun test --reporter=verbose src/libs/hub-client.test.ts
 ## CI/CD Integration
 
 ### GitHub Actions
+
 The project includes test automation:
+
 ```yaml
 # .github/workflows/test.yml
 - name: Run tests
   run: |
-    docker-compose up -d
+    docker-compose -f docker-compose.test.yml up -d
     bun install
     bun run migrate up
     NODE_ENV=test bun test --run
 ```
 
 ### Local CI Simulation
+
 ```bash
 # Simulate CI environment
-docker-compose down
-docker-compose up -d
+docker-compose -f docker-compose.test.yml down
+docker-compose -f docker-compose.test.yml up -d
 bun install
 bun run migrate up
 NODE_ENV=test bun test --run
@@ -364,29 +410,32 @@ NODE_ENV=test bun test --run
 ### Common Issues
 
 1. **Port Conflicts**
+
    ```bash
    # Check if ports are in use
    lsof -i :5432 -i :5433 -i :6379 -i :6380
-   
+
    # Restart Docker services
-   docker-compose down && docker-compose up -d
+   docker-compose -f docker-compose.test.yml down && docker-compose -f docker-compose.test.yml up -d
    ```
 
 2. **Stale Test Data**
+
    ```bash
    # Reset test database
    docker exec farcaster-indexer-bun-postgres-test-1 psql -U postgres -d postgres_test -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
-   
+
    # Re-run migrations
    docker cp drizzle/0000_cool_sally_floyd.sql farcaster-indexer-bun-postgres-test-1:/tmp/migration.sql
    docker exec farcaster-indexer-bun-postgres-test-1 psql -U postgres -d postgres_test -f /tmp/migration.sql
    ```
 
 3. **Module Cache Issues**
+
    ```bash
    # Clear Bun cache
    rm -rf node_modules/.cache
-   
+
    # Rebuild packages
    bun run build
    ```
@@ -410,6 +459,7 @@ NODE_ENV=test bun test --run
 ## Contributing
 
 When adding new tests:
+
 1. Follow existing test patterns
 2. Add appropriate cleanup
 3. Use descriptive test names

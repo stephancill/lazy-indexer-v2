@@ -193,6 +193,9 @@ export async function closeDatabaseConnections() {
 
 // Export schema and types
 export { schema };
+
+// Export materialized view helpers
+export * from "./materialized-views.js";
 export type {
   Target,
   NewTarget,

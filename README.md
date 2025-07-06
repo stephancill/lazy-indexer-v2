@@ -41,6 +41,13 @@ This is a monorepo with the following structure:
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose
 - PostgreSQL and Redis (provided via Docker Compose)
 
+### Docker Services
+
+The project uses two Docker Compose files:
+
+- `docker-compose.yml` - Development services (PostgreSQL, Redis)
+- `docker-compose.test.yml` - Test services (separate PostgreSQL and Redis instances)
+
 ### Environment Setup
 
 1. Clone the repository
@@ -71,31 +78,37 @@ The Farcaster Indexer uses a lazy, target-based indexing strategy that focuses o
 ### Core Components
 
 1. **Configuration System** (`packages/shared/src/config.ts`)
+
    - Centralized configuration management
    - Environment variable support
    - Validation with Zod schemas
 
 2. **Type Definitions** (`packages/shared/src/types.ts`)
+
    - Comprehensive TypeScript interfaces
    - Farcaster message and event types
    - API response types
 
 3. **Hub Client** (Coming in Day 2)
+
    - Resilient communication with Farcaster hubs
    - Automatic fallback between multiple hubs
    - Request transformation for API keys
 
 4. **Database Layer** (Coming in Day 2)
+
    - PostgreSQL with Drizzle ORM
    - Optimized schema for Farcaster data
    - Migration system
 
 5. **Job Queue** (Coming in Day 3)
+
    - BullMQ for background task management
    - Backfill and real-time sync workers
    - Job monitoring with BullBoard
 
 6. **API Server** (Coming in Day 5)
+
    - Hono-based REST API
    - JWT authentication
    - Public and admin endpoints
@@ -123,7 +136,17 @@ The project uses Vitest for testing with comprehensive coverage:
 - **Load Tests**: Performance and scalability testing
 - **Chaos Tests**: Failure scenario testing
 
+### Test Environment Setup
+
+Before running tests, start the test services:
+
+```bash
+# Start test database and Redis
+docker-compose -f docker-compose.test.yml up -d
+```
+
 Run tests with:
+
 ```bash
 bun run test                # All tests
 bun run test:watch         # Watch mode
@@ -131,6 +154,8 @@ bun run test:coverage      # With coverage
 bun run test:integration   # Integration tests only
 bun run test:load         # Load tests only
 ```
+
+For detailed testing instructions, see [TESTING.md](docs/TESTING.md).
 
 ## 📝 Configuration
 

@@ -15,9 +15,12 @@ publicRoutes.get("/users/:fid", async (c) => {
       return c.json({ error: "Invalid FID" }, 400);
     }
 
-    const user = await db.query.users.findFirst({
-      where: eq(users.fid, fid),
-    });
+    const user = await db
+      .select()
+      .from(users)
+      .where(eq(users.fid, fid))
+      .limit(1)
+      .then((results) => results[0] || null);
 
     if (!user) {
       return c.json({ error: "User not found" }, 404);
@@ -64,12 +67,47 @@ publicRoutes.get("/casts/:hash", async (c) => {
       return c.json({ error: "Invalid cast hash" }, 400);
     }
 
-    const cast = await db.query.casts.findFirst({
-      where: eq(casts.hash, hash),
-      with: {
-        user: true,
-      },
-    });
+    const cast = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        text: casts.text,
+        parentHash: casts.parentHash,
+        parentFid: casts.parentFid,
+        parentUrl: casts.parentUrl,
+        timestamp: casts.timestamp,
+        embeds: casts.embeds,
+        mentions: casts.mentions,
+        mentionsPositions: casts.mentionsPositions,
+        createdAt: casts.createdAt,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(eq(casts.hash, hash))
+      .limit(1)
+      .then((results) => {
+        if (results.length === 0) return null;
+        const row = results[0];
+        return {
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        };
+      });
 
     if (!cast) {
       return c.json({ error: "Cast not found" }, 404);
@@ -136,15 +174,47 @@ publicRoutes.get("/feed/:fid", async (c) => {
     const followingFids = following.map((f) => f.targetFid);
 
     // Get casts from followed users
-    const feedCasts = await db.query.casts.findMany({
-      where: inArray(casts.fid, followingFids),
-      with: {
-        user: true,
-      },
-      orderBy: [desc(casts.timestamp)],
-      limit: limit,
-      offset: offset,
-    });
+    const feedCasts = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        text: casts.text,
+        parentHash: casts.parentHash,
+        parentFid: casts.parentFid,
+        parentUrl: casts.parentUrl,
+        timestamp: casts.timestamp,
+        embeds: casts.embeds,
+        mentions: casts.mentions,
+        mentionsPositions: casts.mentionsPositions,
+        createdAt: casts.createdAt,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(inArray(casts.fid, followingFids))
+      .orderBy(desc(casts.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
 
     // Get total count for pagination
     const totalCount = await db
@@ -178,15 +248,47 @@ publicRoutes.get("/users/:fid/casts", async (c) => {
       return c.json({ error: "Invalid FID" }, 400);
     }
 
-    const userCasts = await db.query.casts.findMany({
-      where: eq(casts.fid, fid),
-      with: {
-        user: true,
-      },
-      orderBy: [desc(casts.timestamp)],
-      limit: limit,
-      offset: offset,
-    });
+    const userCasts = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        text: casts.text,
+        parentHash: casts.parentHash,
+        parentFid: casts.parentFid,
+        parentUrl: casts.parentUrl,
+        timestamp: casts.timestamp,
+        embeds: casts.embeds,
+        mentions: casts.mentions,
+        mentionsPositions: casts.mentionsPositions,
+        createdAt: casts.createdAt,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(eq(casts.fid, fid))
+      .orderBy(desc(casts.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
 
     // Get total count for pagination
     const totalCount = await db
@@ -220,15 +322,42 @@ publicRoutes.get("/users/:fid/followers", async (c) => {
       return c.json({ error: "Invalid FID" }, 400);
     }
 
-    const followers = await db.query.links.findMany({
-      where: and(eq(links.targetFid, fid), eq(links.type, "follow")),
-      with: {
-        user: true,
-      },
-      orderBy: [desc(links.timestamp)],
-      limit: limit,
-      offset: offset,
-    });
+    const followers = await db
+      .select({
+        hash: links.hash,
+        fid: links.fid,
+        targetFid: links.targetFid,
+        type: links.type,
+        timestamp: links.timestamp,
+        createdAt: links.createdAt,
+        // User fields for the follower (links.fid)
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(links)
+      .leftJoin(users, eq(links.fid, users.fid))
+      .where(and(eq(links.targetFid, fid), eq(links.type, "follow")))
+      .orderBy(desc(links.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
 
     // Get total count for pagination
     const totalCount = await db
@@ -262,15 +391,42 @@ publicRoutes.get("/users/:fid/following", async (c) => {
       return c.json({ error: "Invalid FID" }, 400);
     }
 
-    const following = await db.query.links.findMany({
-      where: and(eq(links.fid, fid), eq(links.type, "follow")),
-      with: {
-        targetUser: true,
-      },
-      orderBy: [desc(links.timestamp)],
-      limit: limit,
-      offset: offset,
-    });
+    const following = await db
+      .select({
+        hash: links.hash,
+        fid: links.fid,
+        targetFid: links.targetFid,
+        type: links.type,
+        timestamp: links.timestamp,
+        createdAt: links.createdAt,
+        // User fields for the target user (links.targetFid)
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(links)
+      .leftJoin(users, eq(links.targetFid, users.fid))
+      .where(and(eq(links.fid, fid), eq(links.type, "follow")))
+      .orderBy(desc(links.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          targetUser: {
+            fid: row.targetFid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
 
     // Get total count for pagination
     const totalCount = await db
@@ -322,12 +478,36 @@ publicRoutes.get("/trending", async (c) => {
 
     // Get user info for each cast
     const castHashes = trendingCasts.map((c) => c.hash);
-    const castsWithUsers = await db.query.casts.findMany({
-      where: inArray(casts.hash, castHashes),
-      with: {
-        user: true,
-      },
-    });
+    const castsWithUsers = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(inArray(casts.hash, castHashes))
+      .then((results) =>
+        results.map((row) => ({
+          hash: row.hash,
+          fid: row.fid,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
 
     // Merge reaction counts with user info
     const enrichedCasts = trendingCasts.map((trendingCast) => {
