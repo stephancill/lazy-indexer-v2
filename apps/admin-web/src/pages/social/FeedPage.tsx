@@ -16,6 +16,10 @@ const FeedPage = () => {
   });
   const { handleReply, handleLike, handleRecast } = useCastInteractions();
 
+  const handleRefresh = () => {
+    refresh();
+  };
+
   return (
     <div className="w-full">
       <div className="border-b border-gray-200 p-3 md:p-4 bg-white sticky top-0 z-10 border-x-0 md:border-x">
@@ -24,7 +28,7 @@ const FeedPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={refresh}
+            onClick={handleRefresh}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
@@ -32,7 +36,7 @@ const FeedPage = () => {
         </div>
       </div>
 
-      {error && <ErrorState error={error} onRetry={refresh} />}
+      {error && <ErrorState error={error} onRetry={handleRefresh} />}
 
       {data.length === 0 && !loading && !error && <EmptyState />}
 

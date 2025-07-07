@@ -104,10 +104,51 @@ Comprehensive search for users, casts, and content with filtering and sorting op
 
 #### API Requirements:
 
-- `GET /api/v1/search/users?q=:query` - Search users (new)
-- `GET /api/v1/search/casts?q=:query` - Search casts (new)
-- `GET /api/v1/search?q=:query&type=:type` - Universal search (new)
+- `GET /api/v1/search?q=:query&limit=:limit&offset=:offset` - Universal search endpoint (new)
 - `GET /api/v1/trending/topics` - Get trending topics (new)
+
+The search endpoint returns results organized by category:
+
+```json
+{
+  "query": "farcaster",
+  "results": {
+    "users": [
+      {
+        "fid": 1,
+        "username": "dwr",
+        "displayName": "Dan Romero",
+        "pfpUrl": "https://...",
+        "bio": "Co-founder of Farcaster"
+      }
+    ],
+    "casts": [
+      {
+        "hash": "0x...",
+        "fid": 1,
+        "text": "Hello Farcaster!",
+        "timestamp": "2025-07-04T10:00:00Z",
+        "user": {
+          "fid": 1,
+          "username": "dwr",
+          "displayName": "Dan Romero",
+          "pfpUrl": "https://..."
+        }
+      }
+    ]
+  },
+  "counts": {
+    "users": 5,
+    "casts": 42,
+    "total": 47
+  },
+  "pagination": {
+    "limit": 20,
+    "offset": 0,
+    "hasMore": true
+  }
+}
+```
 
 #### Implementation:
 
@@ -125,7 +166,7 @@ import { Button } from "@/components/ui/button";
 
 const SearchPage = () => {
   const [query, setQuery] = useState("");
-  const [searchType, setSearchType] = useState<"all" | "users" | "casts">(
+  const [activeFilter, setActiveFilter] = useState<"all" | "users" | "casts">(
     "all"
   );
   const { data, loading, search } = useSearch();
@@ -139,22 +180,38 @@ const SearchPage = () => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="flex-1"
+            onKeyPress={(e) => e.key === "Enter" && search(query)}
           />
-          <Select value={searchType} onValueChange={setSearchType}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All</SelectItem>
-              <SelectItem value="users">Users</SelectItem>
-              <SelectItem value="casts">Casts</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button onClick={() => search(query, searchType)}>Search</Button>
+          <Button onClick={() => search(query)}>Search</Button>
         </div>
       </Card>
 
-      <SearchResults results={data} loading={loading} type={searchType} />
+      {data && (
+        <div className="mb-4">
+          <div className="flex space-x-1 border-b">
+            <Button
+              variant={activeFilter === "all" ? "default" : "ghost"}
+              onClick={() => setActiveFilter("all")}
+            >
+              All ({data.counts.total})
+            </Button>
+            <Button
+              variant={activeFilter === "users" ? "default" : "ghost"}
+              onClick={() => setActiveFilter("users")}
+            >
+              Users ({data.counts.users})
+            </Button>
+            <Button
+              variant={activeFilter === "casts" ? "default" : "ghost"}
+              onClick={() => setActiveFilter("casts")}
+            >
+              Casts ({data.counts.casts})
+            </Button>
+          </div>
+        </div>
+      )}
+
+      <SearchResults results={data} loading={loading} filter={activeFilter} />
     </div>
   );
 };
@@ -360,6 +417,8 @@ const SocialLayout = ({ children }: { children: React.ReactNode }) => {
 
 ## State Management
 
+**Note**: All async state management in the social client is handled using React Query (TanStack Query). This provides consistent caching, background updates, error handling, and loading states across all components. Custom hooks wrap React Query queries and mutations to provide a clean API for components.
+
 ### Custom Hooks
 
 #### useFeed Hook
@@ -399,18 +458,36 @@ const useFeed = (fid?: number) => {
 #### useSearch Hook
 
 ```typescript
+interface SearchResults {
+  query: string;
+  results: {
+    users: User[];
+    casts: Cast[];
+  };
+  counts: {
+    users: number;
+    casts: number;
+    total: number;
+  };
+  pagination: {
+    limit: number;
+    offset: number;
+    hasMore: boolean;
+  };
+}
+
 const useSearch = () => {
   const [data, setData] = useState<SearchResults>();
   const [loading, setLoading] = useState(false);
 
   const search = useCallback(
-    async (query: string, type: "all" | "users" | "casts" = "all") => {
+    async (query: string, limit: number = 20, offset: number = 0) => {
       if (!query.trim()) return;
 
       setLoading(true);
       try {
         const response = await api.get("/api/v1/search", {
-          params: { q: query, type },
+          params: { q: query, limit, offset },
         });
         setData(response.data);
       } catch (error) {
@@ -494,9 +571,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 #### Enhanced Search
 
 ```typescript
-// GET /api/v1/search/users?q=:query&limit=:limit&offset=:offset
-// GET /api/v1/search/casts?q=:query&limit=:limit&offset=:offset
-// GET /api/v1/search?q=:query&type=:type&limit=:limit&offset=:offset
+// GET /api/v1/search?q=:query&limit=:limit&offset=:offset
+// Returns categorized results with users, casts, and counts
 ```
 
 #### User Activity

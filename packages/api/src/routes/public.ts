@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { db, schema } from "@farcaster-indexer/shared";
-import { eq, desc, and, inArray, sql, asc } from "drizzle-orm";
+import { eq, desc, and, inArray, sql, asc, ilike, or } from "drizzle-orm";
 
 const { casts, users, links, reactions } = schema;
 
@@ -455,7 +455,7 @@ publicRoutes.get("/trending", async (c) => {
     const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
     const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
 
-    // Get casts with reaction counts from last 24 hours
+    // Get casts with reaction counts from last 7 days (extended for demo)
     const trendingCasts = await db
       .select({
         hash: casts.hash,
@@ -470,44 +470,48 @@ publicRoutes.get("/trending", async (c) => {
       })
       .from(casts)
       .leftJoin(reactions, eq(reactions.targetHash, casts.hash))
-      .where(sql`${casts.timestamp} > NOW() - INTERVAL '24 hours'`)
+      .where(sql`${casts.timestamp} > NOW() - INTERVAL '7 days'`)
       .groupBy(casts.hash)
-      .orderBy(desc(sql`count(${reactions.hash})`))
+      .orderBy(desc(sql`count(${reactions.hash})`), desc(casts.timestamp))
       .limit(limit)
       .offset(offset);
 
     // Get user info for each cast
     const castHashes = trendingCasts.map((c) => c.hash);
-    const castsWithUsers = await db
-      .select({
-        hash: casts.hash,
-        fid: casts.fid,
-        // User fields
-        username: users.username,
-        displayName: users.displayName,
-        pfpUrl: users.pfpUrl,
-        bio: users.bio,
-        custodyAddress: users.custodyAddress,
-        syncedAt: users.syncedAt,
-      })
-      .from(casts)
-      .leftJoin(users, eq(casts.fid, users.fid))
-      .where(inArray(casts.hash, castHashes))
-      .then((results) =>
-        results.map((row) => ({
-          hash: row.hash,
-          fid: row.fid,
-          user: {
+    let castsWithUsers: any[] = [];
+
+    if (castHashes.length > 0) {
+      castsWithUsers = await db
+        .select({
+          hash: casts.hash,
+          fid: casts.fid,
+          // User fields
+          username: users.username,
+          displayName: users.displayName,
+          pfpUrl: users.pfpUrl,
+          bio: users.bio,
+          custodyAddress: users.custodyAddress,
+          syncedAt: users.syncedAt,
+        })
+        .from(casts)
+        .leftJoin(users, eq(casts.fid, users.fid))
+        .where(inArray(casts.hash, castHashes))
+        .then((results) =>
+          results.map((row) => ({
+            hash: row.hash,
             fid: row.fid,
-            username: row.username,
-            displayName: row.displayName,
-            pfpUrl: row.pfpUrl,
-            bio: row.bio,
-            custodyAddress: row.custodyAddress,
-            syncedAt: row.syncedAt,
-          },
-        }))
-      );
+            user: {
+              fid: row.fid,
+              username: row.username,
+              displayName: row.displayName,
+              pfpUrl: row.pfpUrl,
+              bio: row.bio,
+              custodyAddress: row.custodyAddress,
+              syncedAt: row.syncedAt,
+            },
+          }))
+        );
+    }
 
     // Merge reaction counts with user info
     const enrichedCasts = trendingCasts.map((trendingCast) => {
@@ -523,17 +527,146 @@ publicRoutes.get("/trending", async (c) => {
       };
     });
 
+    // Get total count for pagination
+    const totalCount = await db
+      .select({ count: sql<number>`count(DISTINCT ${casts.hash})` })
+      .from(casts)
+      .leftJoin(reactions, eq(reactions.targetHash, casts.hash))
+      .where(sql`${casts.timestamp} > NOW() - INTERVAL '7 days'`);
+
     return c.json({
       trending: enrichedCasts,
       pagination: {
         limit,
         offset,
-        total: enrichedCasts.length,
+        total: totalCount[0]?.count || 0,
+        hasMore: offset + enrichedCasts.length < (totalCount[0]?.count || 0),
       },
     });
   } catch (error) {
     console.error("Get trending error:", error);
     return c.json({ error: "Failed to fetch trending casts" }, 500);
+  }
+});
+
+// Universal search endpoint
+publicRoutes.get("/search", async (c) => {
+  try {
+    const query = c.req.query("q")?.trim();
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "20"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
+
+    if (!query) {
+      return c.json({ error: "Search query is required" }, 400);
+    }
+
+    // Search users by username, display name, or bio
+    const userResults = await db
+      .select({
+        fid: users.fid,
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(users)
+      .where(
+        or(
+          ilike(users.username, `%${query}%`),
+          ilike(users.displayName, `%${query}%`),
+          ilike(users.bio, `%${query}%`)
+        )
+      )
+      .orderBy(desc(users.syncedAt))
+      .limit(Math.min(limit, 10)); // Limit users to 10 per search
+
+    // Search casts by text content
+    const castResults = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        text: casts.text,
+        parentHash: casts.parentHash,
+        parentFid: casts.parentFid,
+        parentUrl: casts.parentUrl,
+        timestamp: casts.timestamp,
+        embeds: casts.embeds,
+        mentions: casts.mentions,
+        mentionsPositions: casts.mentionsPositions,
+        createdAt: casts.createdAt,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(ilike(casts.text, `%${query}%`))
+      .orderBy(desc(casts.timestamp))
+      .limit(Math.min(limit, 20)) // Limit casts to 20 per search
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
+
+    // Get counts for each category
+    const [userCount, castCount] = await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(
+          or(
+            ilike(users.username, `%${query}%`),
+            ilike(users.displayName, `%${query}%`),
+            ilike(users.bio, `%${query}%`)
+          )
+        ),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(casts)
+        .where(ilike(casts.text, `%${query}%`)),
+    ]);
+
+    const totalCount =
+      Number(userCount[0]?.count || 0) + Number(castCount[0]?.count || 0);
+
+    return c.json({
+      query,
+      results: {
+        users: userResults,
+        casts: castResults,
+      },
+      counts: {
+        users: userCount[0]?.count || 0,
+        casts: castCount[0]?.count || 0,
+        total: totalCount,
+      },
+      pagination: {
+        limit,
+        offset,
+        hasMore:
+          userResults.length === Math.min(limit, 10) ||
+          castResults.length === Math.min(limit, 20),
+      },
+    });
+  } catch (error) {
+    console.error("Search error:", error);
+    return c.json({ error: "Search failed" }, 500);
   }
 });
 
