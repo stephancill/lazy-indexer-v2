@@ -27,7 +27,7 @@ const TrendingPage = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={refresh}
+            onClick={() => refresh()}
             disabled={loading}
           >
             <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />

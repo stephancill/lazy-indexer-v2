@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -80,22 +81,32 @@ const CastActions = ({
 
 const CastCard = ({ cast, onReply, onLike, onRecast }: CastCardProps) => {
   return (
-    <Card className="border-b border-gray-200 p-3 md:p-4 hover:bg-gray-50 rounded-none border-x-0 md:border-x">
+    <Card className="border-l border-r border-b border-gray-200 p-3 md:p-4 hover:bg-gray-50 rounded-none">
       <div className="flex space-x-3">
-        <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
-          <AvatarImage src={cast.user?.pfpUrl} alt={cast.user?.displayName} />
-          <AvatarFallback>{cast.user?.displayName?.[0] || "U"}</AvatarFallback>
-        </Avatar>
+        <Link to={`/social/profile/${cast.user?.fid || cast.fid}`}>
+          <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 hover:opacity-80 transition-opacity">
+            <AvatarImage src={cast.user?.pfpUrl} alt={cast.user?.displayName} />
+            <AvatarFallback>
+              {cast.user?.displayName?.[0] || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Link>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center space-x-1 sm:space-x-2 flex-wrap">
-            <span className="font-semibold text-sm sm:text-base truncate">
+            <Link
+              to={`/social/profile/${cast.user?.fid || cast.fid}`}
+              className="font-semibold text-sm sm:text-base truncate hover:underline"
+            >
               {cast.user?.displayName || "Unknown"}
-            </span>
-            <span className="text-gray-500 text-sm truncate hidden xs:inline">
+            </Link>
+            <Link
+              to={`/social/profile/${cast.user?.fid || cast.fid}`}
+              className="text-gray-500 text-sm truncate hover:underline"
+            >
               @{cast.user?.username || "unknown"}
-            </span>
-            <span className="text-gray-500 hidden xs:inline">·</span>
+            </Link>
+            <span className="text-gray-500">·</span>
             <span className="text-gray-500 text-sm flex-shrink-0">
               <RelativeTime timestamp={cast.timestamp} />
             </span>

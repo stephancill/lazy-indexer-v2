@@ -271,7 +271,7 @@ publicRoutes.get("/users/:fid/casts", async (c) => {
       })
       .from(casts)
       .leftJoin(users, eq(casts.fid, users.fid))
-      .where(eq(casts.fid, fid))
+      .where(and(eq(casts.fid, fid), sql`${casts.parentHash} IS NULL`))
       .orderBy(desc(casts.timestamp))
       .limit(limit)
       .offset(offset)
@@ -294,7 +294,7 @@ publicRoutes.get("/users/:fid/casts", async (c) => {
     const totalCount = await db
       .select({ count: sql<number>`count(*)` })
       .from(casts)
-      .where(eq(casts.fid, fid));
+      .where(and(eq(casts.fid, fid), sql`${casts.parentHash} IS NULL`));
 
     return c.json({
       casts: userCasts,
@@ -446,6 +446,184 @@ publicRoutes.get("/users/:fid/following", async (c) => {
   } catch (error) {
     console.error("Get following error:", error);
     return c.json({ error: "Failed to fetch following" }, 500);
+  }
+});
+
+// Get user's replies (casts with parentHash)
+publicRoutes.get("/users/:fid/replies", async (c) => {
+  try {
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
+
+    if (Number.isNaN(fid) || fid <= 0) {
+      return c.json({ error: "Invalid FID" }, 400);
+    }
+
+    const userReplies = await db
+      .select({
+        hash: casts.hash,
+        fid: casts.fid,
+        text: casts.text,
+        parentHash: casts.parentHash,
+        parentFid: casts.parentFid,
+        parentUrl: casts.parentUrl,
+        timestamp: casts.timestamp,
+        embeds: casts.embeds,
+        mentions: casts.mentions,
+        mentionsPositions: casts.mentionsPositions,
+        createdAt: casts.createdAt,
+        // User fields
+        username: users.username,
+        displayName: users.displayName,
+        pfpUrl: users.pfpUrl,
+        bio: users.bio,
+        custodyAddress: users.custodyAddress,
+        syncedAt: users.syncedAt,
+      })
+      .from(casts)
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(and(eq(casts.fid, fid), sql`${casts.parentHash} IS NOT NULL`))
+      .orderBy(desc(casts.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          ...row,
+          user: {
+            fid: row.fid,
+            username: row.username,
+            displayName: row.displayName,
+            pfpUrl: row.pfpUrl,
+            bio: row.bio,
+            custodyAddress: row.custodyAddress,
+            syncedAt: row.syncedAt,
+          },
+        }))
+      );
+
+    // Get total count for pagination
+    const totalCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(casts)
+      .where(and(eq(casts.fid, fid), sql`${casts.parentHash} IS NOT NULL`));
+
+    return c.json({
+      replies: userReplies,
+      pagination: {
+        limit,
+        offset,
+        total: totalCount[0]?.count || 0,
+        hasMore: offset + userReplies.length < (totalCount[0]?.count || 0),
+      },
+    });
+  } catch (error) {
+    console.error("Get user replies error:", error);
+    return c.json({ error: "Failed to fetch user replies" }, 500);
+  }
+});
+
+// Get user's likes (reactions by user)
+publicRoutes.get("/users/:fid/likes", async (c) => {
+  try {
+    const fid = Number.parseInt(c.req.param("fid"));
+    const limit = Math.min(Number.parseInt(c.req.query("limit") || "50"), 100);
+    const offset = Math.max(Number.parseInt(c.req.query("offset") || "0"), 0);
+
+    if (Number.isNaN(fid) || fid <= 0) {
+      return c.json({ error: "Invalid FID" }, 400);
+    }
+
+    const userLikes = await db
+      .select({
+        hash: reactions.hash,
+        fid: reactions.fid,
+        type: reactions.type,
+        targetHash: reactions.targetHash,
+        timestamp: reactions.timestamp,
+        createdAt: reactions.createdAt,
+        // Cast fields
+        castHash: casts.hash,
+        castFid: casts.fid,
+        castText: casts.text,
+        castParentHash: casts.parentHash,
+        castParentFid: casts.parentFid,
+        castParentUrl: casts.parentUrl,
+        castTimestamp: casts.timestamp,
+        castEmbeds: casts.embeds,
+        castMentions: casts.mentions,
+        castMentionsPositions: casts.mentionsPositions,
+        castCreatedAt: casts.createdAt,
+        // User fields for the cast author
+        castUsername: users.username,
+        castDisplayName: users.displayName,
+        castPfpUrl: users.pfpUrl,
+        castBio: users.bio,
+        castCustodyAddress: users.custodyAddress,
+        castSyncedAt: users.syncedAt,
+      })
+      .from(reactions)
+      .leftJoin(casts, eq(reactions.targetHash, casts.hash))
+      .leftJoin(users, eq(casts.fid, users.fid))
+      .where(and(eq(reactions.fid, fid), eq(reactions.type, "like")))
+      .orderBy(desc(reactions.timestamp))
+      .limit(limit)
+      .offset(offset)
+      .then((results) =>
+        results.map((row) => ({
+          reaction: {
+            hash: row.hash,
+            fid: row.fid,
+            type: row.type,
+            targetHash: row.targetHash,
+            timestamp: row.timestamp,
+            createdAt: row.createdAt,
+          },
+          cast: row.castHash
+            ? {
+                hash: row.castHash,
+                fid: row.castFid,
+                text: row.castText,
+                parentHash: row.castParentHash,
+                parentFid: row.castParentFid,
+                parentUrl: row.castParentUrl,
+                timestamp: row.castTimestamp,
+                embeds: row.castEmbeds,
+                mentions: row.castMentions,
+                mentionsPositions: row.castMentionsPositions,
+                createdAt: row.castCreatedAt,
+                user: {
+                  fid: row.castFid,
+                  username: row.castUsername,
+                  displayName: row.castDisplayName,
+                  pfpUrl: row.castPfpUrl,
+                  bio: row.castBio,
+                  custodyAddress: row.castCustodyAddress,
+                  syncedAt: row.castSyncedAt,
+                },
+              }
+            : null,
+        }))
+      );
+
+    // Get total count for pagination
+    const totalCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(reactions)
+      .where(and(eq(reactions.fid, fid), eq(reactions.type, "like")));
+
+    return c.json({
+      likes: userLikes,
+      pagination: {
+        limit,
+        offset,
+        total: totalCount[0]?.count || 0,
+        hasMore: offset + userLikes.length < (totalCount[0]?.count || 0),
+      },
+    });
+  } catch (error) {
+    console.error("Get user likes error:", error);
+    return c.json({ error: "Failed to fetch user likes" }, 500);
   }
 });
 
